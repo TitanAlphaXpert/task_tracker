@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#141A22">
+<title>Job Card — Daily Task Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+:root{--bg:#141A22;--surface:#1E2733;--surface2:#262F3D;--border:#37424F;--accent:#FF6B35;--caution:#FFC845;--success:#49B683;--danger:#E76161;--text:#EDEFF2;--muted:#8B97A8;--display:'Oswald',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:var(--body);background:radial-gradient(circle at 10% -10%,rgba(255,107,53,.1),transparent 40%),var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
+#app{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px 40px}.hidden{display:none!important}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px}.brand-mark{width:38px;height:38px;border-radius:8px;background:linear-gradient(155deg,var(--accent),#B84F27);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#161B22;font-size:13px}.brand-text h1{font-family:var(--display);font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.5px}.brand-text p{margin:0;font-size:11px;color:var(--muted)}.icon-btn,.back-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;cursor:pointer}.icon-btn{width:36px;height:36px}.back-btn{padding:8px 12px;font-weight:600}.back-row{margin-bottom:14px}.section-label,.field label{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}.section-label{margin:4px 0 10px}
+select,input,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:11px;font:14px var(--body);outline:none}select{appearance:auto}.field{margin-bottom:14px}.field label{display:block;margin-bottom:6px}.person-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.person-tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}.person-avatar{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:600}.person-name{font-weight:600;font-size:14px}.empty{border:1px dashed var(--border);border-radius:14px;padding:28px 18px;text-align:center;color:var(--muted);font-size:13px}
+.pin-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:34px}.pin-input{width:180px;text-align:center;letter-spacing:8px;font:700 22px var(--mono)}.btn{border:0;border-radius:9px;padding:10px 12px;font:600 13px var(--body);cursor:pointer}.btn-accent{background:linear-gradient(155deg,var(--accent),#B84F27);color:#161B22}.btn-done{background:var(--success);color:#0E1F17}.btn-help{background:transparent;color:var(--caution);border:1px solid var(--caution)}.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}.btn-wide{width:100%}.btn-row{display:flex;gap:8px;margin-top:10px}.btn-row>*{flex:1}
+.session{font-size:11px;color:var(--muted);margin:-8px 0 14px}.odo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.odo-label{font:11px var(--mono);color:var(--muted);text-transform:uppercase}.odo-digits{display:flex;gap:3px;margin-top:6px}.odo-digit{background:#0E1319;border:1px solid var(--border);border-radius:4px;width:22px;height:30px;display:flex;align-items:center;justify-content:center;font:700 16px var(--mono);color:var(--caution)}.subhead{font:14px var(--display);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 8px}
+.jobcard{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:14px 14px 14px 16px;margin-bottom:12px}.jobcard.overdue{border-left-color:var(--danger)}.jobcard.help{border-left-color:var(--caution)}.jobcard.done,.jobcard.late{border-left-color:var(--success);opacity:.82}.jc-top{display:flex;justify-content:space-between;gap:10px}.jc-id{font:10px var(--mono);color:var(--muted)}.jc-title{font-weight:600;font-size:15px;line-height:1.35;margin:3px 0}.jc-due{font:11px var(--mono);color:var(--muted);white-space:nowrap}.overdue-txt{color:var(--danger)}.status{display:inline-block;margin-top:7px;padding:3px 7px;border-radius:5px;font:10px var(--mono)}.status.done{color:var(--success);background:rgba(73,182,131,.12)}.status.late{color:var(--caution);background:rgba(255,200,69,.12)}.status.help{color:var(--caution);background:rgba(255,200,69,.12)}.status.pending{color:var(--muted);background:rgba(139,151,168,.12)}.help-note{background:rgba(255,200,69,.08);border:1px solid rgba(255,200,69,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--caution);margin-top:8px}.help-box{margin-top:10px}.help-box textarea{min-height:60px;resize:vertical}.actions{display:flex;gap:8px;margin-top:10px}.actions>*{flex:1}
+.tabbar{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px}.tab{flex:1;text-align:center;padding:9px 3px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)}.tab.active{background:var(--accent);color:#161B22}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted)}.chip.selected{background:var(--accent);border-color:var(--accent);color:#161B22;font-weight:600}
+.board-person{margin-bottom:20px}.board-person h3{font:14px var(--display);text-transform:uppercase;color:var(--muted);margin:0 0 8px}.board-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:8px}.board-top{display:flex;justify-content:space-between;gap:8px}.mini{font:10px var(--mono);padding:3px 6px;border-radius:5px;background:var(--surface2);color:var(--muted);white-space:nowrap}.mini.late{color:var(--caution)}.mini.done{color:var(--success)}.mini.help{color:var(--caution)}.small{font-size:11px;color:var(--muted);margin-top:5px}.manager-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.danger-text{color:var(--danger)}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:13px;z-index:50;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+@media(max-width:360px){.person-grid{grid-template-columns:1fr}.tab{font-size:10px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark">JC</div><div class="brand-text"><h1>Job Card</h1><p>Daily task board</p></div></div>
+    <button class="icon-btn" onclick="openManager()">⚙</button>
+  </div>
+
+  <div id="screen-home">
+    <div class="section-label">Select dealership</div>
+    <div class="field"><select id="dealerSelect" onchange="loadPeopleForDealer()"><option value="">Loading...</option></select></div>
+    <div class="section-label">Select your name</div>
+    <div id="personGrid" class="person-grid"></div>
+  </div>
+
+  <div id="screen-employee-pin" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Back</button></div>
+    <div class="pin-wrap"><div class="section-label">Employee PIN</div><div id="employeeLoginLabel" style="font-weight:600"></div><input id="employeePin" class="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••"><button class="btn btn-accent" style="width:180px" onclick="employeeLogin()">Enter</button></div>
+  </div>
+
+  <div id="screen-person" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="logout()">← Change user</button></div>
+    <div class="session" id="employeeSession"></div>
+    <div class="odo-wrap"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div>
+    <div class="subhead">Today's Job Card</div><div id="todayTasks"></div>
+    <div id="overdueWrap"><div class="subhead">Needs attention</div><div id="overdueTasks"></div></div>
+    <div id="completedWrap"><div class="subhead">Completed</div><div id="completedTasks"></div></div>
+  </div>
+
+  <div id="screen-manager-pin" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Back</button></div>
+    <div class="pin-wrap"><div class="section-label">Manager PIN</div><input id="managerPin" class="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••••"><button class="btn btn-accent" style="width:180px" onclick="managerLogin()">Enter</button></div>
+  </div>
+
+  <div id="screen-manager" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Exit manager</button></div>
+    <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div></div>
+    <div id="tab-dashboard"></div>
+    <div id="tab-assign" class="hidden">
+      <div class="field"><label>Task title</label><textarea id="taskTitle" rows="2" placeholder="e.g. Follow up on Pro X customer complaint"></textarea></div>
+      <div class="two"><div class="field"><label>Due date</label><input id="taskDue" type="date"></div><div class="field"><label>Dealer</label><select id="taskDealer" onchange="renderAssignPeople()"></select></div></div>
+      <div class="field"><label>Assign to</label><div class="chips" id="assignChips"></div></div>
+      <button class="btn btn-accent btn-wide" onclick="assignTask()">Assign task</button>
+    </div>
+    <div id="tab-board" class="hidden"></div>
+    <div id="tab-team" class="hidden">
+      <div class="manager-card"><div class="field"><label>Dealership</label><select id="newPersonDealer"></select></div><div class="field"><label>Employee name</label><input id="newPersonName" placeholder="Name"></div><div class="field"><label>Employee PIN</label><input id="newPersonPin" inputmode="numeric" maxlength="6" placeholder="4–6 digits"></div><button class="btn btn-accent btn-wide" onclick="addPerson()">Add employee</button></div>
+      <div id="peopleList"></div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const SUPABASE_URL = "https://rhgnnvmzautqupwbhymq.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_0VdfBOsd53Rbwb4EN1Eorw_BEFIVcvI";
+const sb = (SUPABASE_URL.startsWith("http") && !SUPABASE_ANON_KEY.startsWith("PASTE_")) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+/* ---------- STATE ---------- */
+let dealers=[], people=[], tasks=[], currentDealerId=null, currentPerson=null, managerUnlocked=false, selectedAssignees=new Set();
+
+const $=id=>document.getElementById(id);
+function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
+function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function initials(n){return n.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
+function istNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}))}
+function today(){let d=istNow();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function fmtDate(s){return s?new Date(s+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}):"-"}
+function fmtTs(s){return s?new Date(s).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"-"}
+function showScreen(id){["screen-home","screen-employee-pin","screen-person","screen-manager-pin","screen-manager"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function goHome(){currentPerson=null;managerUnlocked=false;showScreen("screen-home");loadDealers()}
+function logout(){currentPerson=null;showScreen("screen-home");loadDealers()}
+
+/* ---------- DATABASE CALLS ---------- */
+async function rpc(name,args={}){
+  if(!sb) throw new Error("Supabase is not configured. Add URL and publishable key in index.html.");
+  const {data,error}=await sb.rpc(name,args); if(error) throw error; return data;
+}
+async function loadDealers(){
+  try{
+    if(!sb){$("dealerSelect").innerHTML="<option>Configure Supabase first</option>";$("personGrid").innerHTML='<div class="empty" style="grid-column:1/-1">Open <b>SETUP.md</b> and configure the free Supabase project first.</div>';return}
+    dealers=await rpc("public_get_dealers");
+    $("dealerSelect").innerHTML=dealers.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
+    currentDealerId=$("dealerSelect").value;
+    await loadPeopleForDealer();
+  }catch(e){console.error(e);toast(e.message||"Could not load dealerships")}
+}
+async function loadPeopleForDealer(){
+  currentDealerId=$("dealerSelect").value;if(!currentDealerId)return;
+  try{
+    people=await rpc("public_get_people",{p_dealer_id:currentDealerId});
+    $("personGrid").innerHTML=people.length?people.map(p=>`<div class="person-tile" onclick="selectPerson('${p.id}')"><div class="person-avatar">${initials(p.name)}</div><div class="person-name">${escapeHtml(p.name)}</div></div>`).join(""):'<div class="empty" style="grid-column:1/-1">No employees added yet.</div>';
+  }catch(e){toast(e.message||"Could not load employees")}
+}
+function selectPerson(id){currentPerson=people.find(p=>p.id===id);$("employeeLoginLabel").textContent=currentPerson?.name||"";$("employeePin").value="";showScreen("screen-employee-pin");setTimeout(()=>$("employeePin").focus(),100)}
+async function employeeLogin(){
+  if(!currentPerson)return;
+  try{await rpc("employee_verify",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});await loadEmployeeTasks();showScreen("screen-person")}catch(e){toast("Incorrect PIN")}
+}
+async function loadEmployeeTasks(){
+  const data=await rpc("employee_get_tasks",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});
+  tasks=data.tasks||[];currentPerson=data.person;
+  $("employeeSession").textContent=`${currentPerson.name} • ${currentPerson.dealer_name}`;
+  renderPerson();
+}
+function renderPerson(){
+  const t=today();const my=tasks.filter(x=>x.assigned_to===currentPerson.id);
+  const todayTasks=my.filter(x=>x.due_date===t && !["done","late"].includes(x.status));
+  const overdue=my.filter(x=>x.due_date<t && !["done","late"].includes(x.status));
+  const completed=my.filter(x=>["done","late"].includes(x.status)).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at));
+  $("todayTasks").innerHTML=todayTasks.length?todayTasks.map(renderEmployeeCard).join(""):'<div class="empty">No open tasks for today. 🎉</div>';
+  $("overdueWrap").classList.toggle("hidden",!overdue.length);$("overdueTasks").innerHTML=overdue.map(x=>renderEmployeeCard(x,true)).join("");
+  $("completedWrap").classList.toggle("hidden",!completed.length);$("completedTasks").innerHTML=completed.slice(0,12).map(renderEmployeeCard).join("");
+  renderStreak(my);
+}
+function renderStreak(my){
+  const doneDates=new Set(my.filter(x=>["done","late"].includes(x.status)).map(x=>x.completed_at?.slice(0,10)).filter(Boolean));
+  let n=0,d=istNow();let ds=today();if(doneDates.has(ds))n++;
+  for(let i=1;i<120;i++){d.setDate(d.getDate()-1);ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;if(doneDates.has(ds))n++;else break}
+  $("odoDigits").innerHTML=String(n).padStart(3,"0").split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
+}
+function renderEmployeeCard(t,overdue=false){
+  const late=t.status==="late", done=t.status==="done";
+  const cls=done||late?"done":(t.status==="help"?"help":(overdue?"overdue":""));
+  const status=done?"COMPLETED":late?"COMPLETED LATE":t.status==="help"?"HELP REQUESTED":"PENDING";
+  let h=`<div class="jobcard ${cls}"><div class="jc-top"><div><div class="jc-id">JC-${t.id.slice(-6).toUpperCase()}</div><div class="jc-title">${escapeHtml(t.title)}</div></div><div class="jc-due ${overdue?"overdue-txt":""}">${fmtDate(t.due_date)}</div></div><span class="status ${t.status}">${status}</span>`;
+  if(t.status==="help"&&t.help_note)h+=`<div class="help-note">Help requested: ${escapeHtml(t.help_note)}</div>`;
+  if(done||late)h+=`<div class="small">Completed: ${fmtTs(t.completed_at)}</div>`;
+  if(!done&&!late)h+=`<div class="actions"><button class="btn btn-done" onclick="confirmDone('${t.id}')">✓ Done</button><button class="btn btn-help" onclick="toggleHelp('${t.id}')">Need help</button></div><div class="help-box hidden" id="help-${t.id}"><textarea id="note-${t.id}" placeholder="What do you need help with?"></textarea><button class="btn btn-accent btn-wide" onclick="sendHelp('${t.id}')">Send to manager</button></div>`;
+  return h+"</div>";
+}
+function toggleHelp(id){$("help-"+id).classList.toggle("hidden")}
+async function confirmDone(id){if(confirm("Confirm that this task is completed?")){try{await rpc("employee_complete_task",{p_task_id:id,p_person_id:currentPerson.id,p_pin:$("employeePin").value});toast("Task completed");await loadEmployeeTasks()}catch(e){toast(e.message||"Could not complete task")}}}
+async function sendHelp(id){const note=$("note-"+id).value.trim();if(!note)return toast("Enter a note first");try{await rpc("employee_help_task",{p_task_id:id,p_person_id:currentPerson.id,p_pin:$("employeePin").value,p_note:note});toast("Help request sent");await loadEmployeeTasks()}catch(e){toast(e.message||"Could not send request")}}
+
+/* ---------- MANAGER ---------- */
+function openManager(){$("managerPin").value="";showScreen("screen-manager-pin");setTimeout(()=>$("managerPin").focus(),100)}
+async function managerLogin(){try{await rpc("manager_verify",{p_pin:$("managerPin").value});managerUnlocked=true;await loadManagerData();showScreen("screen-manager");switchTab("dashboard")}catch(e){toast("Incorrect manager PIN")}}
+async function managerCall(name,args={}){if(!managerUnlocked)throw new Error("Manager session expired");return rpc(name,{p_pin:$("managerPin").value,...args})}
+async function loadManagerData(){const d=await managerCall("manager_get_data");dealers=d.dealers;people=d.people;tasks=d.tasks;populateDealerSelects();renderDashboard()}
+function populateDealerSelects(){
+  const opts=dealers.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
+  $("taskDealer").innerHTML=opts;$("newPersonDealer").innerHTML=opts;renderAssignPeople();
+}
+function switchTab(name){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));["dashboard","assign","board","team"].forEach(x=>$("tab-"+x).classList.toggle("hidden",x!==name));if(name==="dashboard")renderDashboard();if(name==="assign")renderAssignPeople();if(name==="board")renderBoard();if(name==="team")renderTeam()}
+function renderDashboard(){
+  const open=tasks.filter(t=>!["done","late"].includes(t.status)).length,late=tasks.filter(t=>t.status==="late").length,done=tasks.filter(t=>t.status==="done").length,help=tasks.filter(t=>t.status==="help").length;
+  $("tab-dashboard").innerHTML=`<div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed late</div></div><div class="manager-card"><b>${done}</b><div class="small">Completed on time</div></div><div class="manager-card"><b>${help}</b><div class="small">Help requested</div></div></div>`+dealers.map(d=>{let p=people.filter(x=>x.dealer_id===d.id),tt=tasks.filter(x=>p.some(y=>y.id===x.assigned_to));return `<div class="manager-card"><b>${escapeHtml(d.name)}</b><div class="small">${p.length} employees • ${tt.filter(x=>!["done","late"].includes(x.status)).length} open tasks • ${tt.filter(x=>x.status==="late").length} completed late</div></div>`}).join("");
+}
+function renderAssignPeople(){const did=$("taskDealer").value;const pp=people.filter(p=>p.dealer_id===did);$("assignChips").innerHTML=pp.length?pp.map(p=>`<div class="chip ${selectedAssignees.has(p.id)?"selected":""}" onclick="toggleAssignee('${p.id}')">${escapeHtml(p.name)}</div>`).join(""):'<div class="small">No employees in this dealership.</div>'}
+function toggleAssignee(id){selectedAssignees.has(id)?selectedAssignees.delete(id):selectedAssignees.add(id);renderAssignPeople()}
+async function assignTask(){const title=$("taskTitle").value.trim(),due=$("taskDue").value,did=$("taskDealer").value;if(!title||!due||!selectedAssignees.size)return toast("Enter title, due date and at least one employee");try{for(const pid of selectedAssignees)await managerCall("manager_create_task",{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_due_date:due});toast("Task assigned");$("taskTitle").value="";selectedAssignees.clear();await loadManagerData();switchTab("assign")}catch(e){toast(e.message||"Could not assign task")}}
+function personName(id){return people.find(p=>p.id===id)?.name||"Unknown"}
+function dealerName(id){return dealers.find(d=>d.id===id)?.name||"Unknown"}
+function renderBoard(){
+  const groups=dealers.map(d=>{const pp=people.filter(p=>p.dealer_id===d.id);return `<div class="board-person"><h3>${escapeHtml(d.name)}</h3>`+pp.map(p=>{const ts=tasks.filter(t=>t.assigned_to===p.id).sort((a,b)=>a.due_date.localeCompare(b.due_date));return `<div style="margin-bottom:14px"><div class="small" style="margin-bottom:6px;color:var(--text)">${escapeHtml(p.name)}</div>`+(ts.length?ts.map(renderManagerTask).join(""):'<div class="small">No tasks</div>')+"</div>"}).join("")+"</div>"}).join("");
+  $("tab-board").innerHTML=groups||'<div class="empty">No data</div>';
+}
+function renderManagerTask(t){const overdue=!["done","late"].includes(t.status)&&t.due_date<today();return `<div class="board-card"><div class="board-top"><div><div class="jc-id">JC-${t.id.slice(-6).toUpperCase()} • ${fmtDate(t.due_date)}</div><div style="font-weight:600;font-size:13px;margin-top:3px">${escapeHtml(t.title)}</div></div><span class="mini ${t.status}">${t.status==="late"?"COMPLETED LATE":t.status.toUpperCase()}</span></div>${t.help_note?`<div class="help-note">${escapeHtml(t.help_note)}</div>`:""}${t.completed_at?`<div class="small">Completed: ${fmtTs(t.completed_at)}</div>`:""}${overdue?'<div class="small danger-text">OVERDUE</div>':""}<div class="actions"><button class="btn btn-secondary" onclick="editTask('${t.id}')">Edit</button>${t.status==="help"?`<button class="btn btn-secondary" onclick="resolveHelp('${t.id}')">Resolve</button>`:""}${["done","late"].includes(t.status)?`<button class="btn btn-secondary" onclick="reopenTask('${t.id}')">Reopen</button>`:""}<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></div></div>`}
+async function editTask(id){
+  const t=tasks.find(x=>x.id===id); if(!t)return;
+  const title=prompt("Task title:",t.title); if(title===null)return;
+  const due=prompt("Due date (YYYY-MM-DD):",t.due_date); if(due===null)return;
+  const sameDealerPeople=people.filter(p=>p.dealer_id===t.dealer_id);
+  const menu=sameDealerPeople.map((p,i)=>`${i+1}. ${p.name}`).join("\\n");
+  const current=Math.max(0,sameDealerPeople.findIndex(p=>p.id===t.assigned_to))+1;
+  const choice=prompt(`Assign to (enter number):\\n${menu}`,String(current)); if(choice===null)return;
+  const idx=Number(choice)-1; const assignee=sameDealerPeople[idx]; if(!assignee)return toast("Invalid employee selection");
+  try{
+    await managerCall("manager_update_task",{p_task_id:id,p_title:title.trim(),p_due_date:due,p_assigned_to:assignee.id});
+    toast("Task updated"); await loadManagerData(); renderBoard();
+  }catch(e){toast(e.message||"Could not update")}
+}
+async function deleteTask(id){if(!confirm("Delete this task?"))return;try{await managerCall("manager_delete_task",{p_task_id:id});toast("Task deleted");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not delete")}}
+async function resolveHelp(id){try{await managerCall("manager_set_task_status",{p_task_id:id,p_status:"pending"});toast("Help request resolved");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not resolve")}}
+async function reopenTask(id){if(!confirm("Reopen this completed task?"))return;try{await managerCall("manager_set_task_status",{p_task_id:id,p_status:"pending"});toast("Task reopened");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not reopen")}}
+function renderTeam(){$("peopleList").innerHTML=dealers.map(d=>`<div class="board-person"><h3>${escapeHtml(d.name)}</h3>`+people.filter(p=>p.dealer_id===d.id).map(p=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${escapeHtml(p.name)}</b><div class="small">PIN protected</div></div><button class="btn btn-danger" onclick="removePerson('${p.id}')">Remove</button></div></div>`).join("")+"</div>").join("")}
+async function addPerson(){const did=$("newPersonDealer").value,name=$("newPersonName").value.trim(),pin=$("newPersonPin").value.trim();if(!name||!/^\d{4,6}$/.test(pin))return toast("Name + 4–6 digit PIN required");try{await rpc("manager_add_person",{p_manager_pin:$("managerPin").value,p_dealer_id:did,p_name:name,p_employee_pin:pin});toast("Employee added");$("newPersonName").value="";$("newPersonPin").value="";await loadManagerData();renderTeam()}catch(e){toast(e.message||"Could not add employee")}}
+async function removePerson(id){if(!confirm("Remove this employee? Existing tasks will remain in history."))return;try{await managerCall("manager_remove_person",{p_person_id:id});toast("Employee removed");await loadManagerData();renderTeam()}catch(e){toast(e.message||"Could not remove employee")}}
+
+$("taskDue").value=today();
+loadDealers();
+</script>
+</body>
+</html>
