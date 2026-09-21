@@ -49,7 +49,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
       <div class="small" style="margin:5px 0 10px">Raise a request for guidance, technical support, customer issues, approvals, or other help.</div>
       <button class="btn btn-accent btn-wide" onclick="toggleRequestForm()">+ Raise a Request</button>
       <div id="requestForm" class="hidden" style="margin-top:12px">
-        <div class="field"><label>Request type</label><select id="requestCategory"><option>Guidance</option><option>Technical Support</option><option>Customer Issue</option><option>Parts / Service Support</option><option>Approval / Favour</option><option>Other</option></select></div>
+        <div class="field"><label>Request type</label><select id="requestCategory"><option>Guidance</option><option>Technical Support</option><option>Customer Issue</option><option>Parts / Service Support</option><option>Approval</option><option>Other</option></select></div>
         <div class="field"><label>Subject</label><input id="requestSubject" maxlength="120" placeholder="Briefly describe what you need"></div>
         <div class="field"><label>Details</label><textarea id="requestDetails" maxlength="2000" rows="4" placeholder="Explain the situation and the support you need..."></textarea></div>
         <button class="btn btn-accent btn-wide" onclick="submitRequest()">Send Request</button>
@@ -192,7 +192,7 @@ async function submitRequest(){
   if(!subject||!details)return toast("Enter subject and details");
   try{
     await rpc("employee_create_request",{p_person_id:currentPerson.id,p_pin:$("employeePin").value,p_category:category,p_subject:subject,p_details:details});
-    toast("Request sent to CSM / manager");
+    toast("Request sent to CSM");
     $("requestSubject").value="";$("requestDetails").value="";$("requestForm").classList.add("hidden");
     await loadEmployeeTasks();
   }catch(e){toast(e.message||"Could not send request")}
