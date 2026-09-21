@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#141A22">
-<title>Job Card — Daily Task Tracker</title>
+<title>Task Tracker — Daily Task Tracker</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{--bg:#141A22;--surface:#1E2733;--surface2:#262F3D;--border:#37424F;--accent:#FF6B35;--caution:#FFC845;--success:#49B683;--danger:#E76161;--text:#EDEFF2;--muted:#8B97A8;--display:'Oswald',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
@@ -14,7 +14,7 @@
 select,input,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:11px;font:14px var(--body);outline:none}select{appearance:auto}.field{margin-bottom:14px}.field label{display:block;margin-bottom:6px}.person-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.person-tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}.person-avatar{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:600}.person-name{font-weight:600;font-size:14px}.empty{border:1px dashed var(--border);border-radius:14px;padding:28px 18px;text-align:center;color:var(--muted);font-size:13px}
 .pin-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:34px}.pin-input{width:180px;text-align:center;letter-spacing:8px;font:700 22px var(--mono)}.btn{border:0;border-radius:9px;padding:10px 12px;font:600 13px var(--body);cursor:pointer}.btn-accent{background:linear-gradient(155deg,var(--accent),#B84F27);color:#161B22}.btn-done{background:var(--success);color:#0E1F17}.btn-help{background:transparent;color:var(--caution);border:1px solid var(--caution)}.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}.btn-wide{width:100%}.btn-row{display:flex;gap:8px;margin-top:10px}.btn-row>*{flex:1}
 .session{font-size:11px;color:var(--muted);margin:-8px 0 14px}.odo-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.odo-label{font:11px var(--mono);color:var(--muted);text-transform:uppercase}.odo-digits{display:flex;gap:3px;margin-top:6px}.odo-digit{background:#0E1319;border:1px solid var(--border);border-radius:4px;width:22px;height:30px;display:flex;align-items:center;justify-content:center;font:700 16px var(--mono);color:var(--caution)}.subhead{font:14px var(--display);text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:18px 0 8px}
-.jobcard{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:14px 14px 14px 16px;margin-bottom:12px}.jobcard.overdue{border-left-color:var(--danger)}.jobcard.help{border-left-color:var(--caution)}.jobcard.done,.jobcard.late{border-left-color:var(--success);opacity:.82}.jc-top{display:flex;justify-content:space-between;gap:10px}.jc-id{font:10px var(--mono);color:var(--muted)}.jc-title{font-weight:600;font-size:15px;line-height:1.35;margin:3px 0}.jc-due{font:11px var(--mono);color:var(--muted);white-space:nowrap}.overdue-txt{color:var(--danger)}.status{display:inline-block;margin-top:7px;padding:3px 7px;border-radius:5px;font:10px var(--mono)}.status.done{color:var(--success);background:rgba(73,182,131,.12)}.status.late{color:var(--caution);background:rgba(255,200,69,.12)}.status.help{color:var(--caution);background:rgba(255,200,69,.12)}.status.pending{color:var(--muted);background:rgba(139,151,168,.12)}.help-note{background:rgba(255,200,69,.08);border:1px solid rgba(255,200,69,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--caution);margin-top:8px}.help-box{margin-top:10px}.help-box textarea{min-height:60px;resize:vertical}.actions{display:flex;gap:8px;margin-top:10px}.actions>*{flex:1}
+.jobcard{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:14px 14px 14px 16px;margin-bottom:12px}.jobcard.overdue{border-left-color:var(--danger)}.jobcard.help{border-left-color:var(--caution)}.jobcard.done,.jobcard.late{border-left-color:var(--success);opacity:.82}.jc-top{display:flex;justify-content:space-between;gap:10px}.jc-id{font:10px var(--mono);color:var(--muted)}.jc-title{font-weight:600;font-size:15px;line-height:1.35;margin:3px 0}.jc-due{font:11px var(--mono);color:var(--muted);white-space:nowrap}.overdue-txt{color:var(--danger)}.status{display:inline-block;margin-top:7px;padding:3px 7px;border-radius:5px;font:10px var(--mono)}.status.done{color:var(--success);background:rgba(73,182,131,.12)}.status.late{color:var(--caution);background:rgba(255,200,69,.12)}.status.help{color:var(--caution);background:rgba(255,200,69,.12)}.status.pending{color:var(--muted);background:rgba(139,151,168,.12)}.help-note{background:rgba(255,200,69,.08);border:1px solid rgba(255,200,69,.3);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--caution);margin-top:8px}.help-box{margin-top:10px}.reply-box{margin-top:10px;padding:9px;background:rgba(73,182,131,.06);border:1px solid rgba(73,182,131,.22);border-radius:8px}.reply-box textarea{min-height:70px;resize:vertical}.help-box textarea{min-height:60px;resize:vertical}.actions{display:flex;gap:8px;margin-top:10px}.actions>*{flex:1}
 .tabbar{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px}.tab{flex:1;text-align:center;padding:9px 3px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted)}.tab.active{background:var(--accent);color:#161B22}.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:13px;cursor:pointer;color:var(--muted)}.chip.selected{background:var(--accent);border-color:var(--accent);color:#161B22;font-weight:600}
 .board-person{margin-bottom:20px}.board-person h3{font:14px var(--display);text-transform:uppercase;color:var(--muted);margin:0 0 8px}.board-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:8px}.board-top{display:flex;justify-content:space-between;gap:8px}.mini{font:10px var(--mono);padding:3px 6px;border-radius:5px;background:var(--surface2);color:var(--muted);white-space:nowrap}.mini.late{color:var(--caution)}.mini.done{color:var(--success)}.mini.help{color:var(--caution)}.small{font-size:11px;color:var(--muted);margin-top:5px}.manager-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.danger-text{color:var(--danger)}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);padding:10px 16px;border-radius:10px;font-size:13px;z-index:50;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
 @media(max-width:360px){.person-grid{grid-template-columns:1fr}.tab{font-size:10px}}
@@ -24,7 +24,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 <body>
 <div id="app">
   <div class="topbar">
-    <div class="brand"><div class="brand-mark">JC</div><div class="brand-text"><h1>Job Card</h1><p>Daily task board</p></div></div>
+    <div class="brand"><div class="brand-text"><h1>Task Tracker</h1><p>Daily task board</p></div></div>
     <button class="icon-btn" onclick="openManager()">⚙</button>
   </div>
 
@@ -44,8 +44,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="back-row"><button class="back-btn" onclick="logout()">← Change user</button></div>
     <div class="session" id="employeeSession"></div>
     <div class="odo-wrap"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div>
-    <div class="subhead">Today's Job Card</div><div id="todayTasks"></div>
-    <div id="overdueWrap"><div class="subhead">Needs attention</div><div id="overdueTasks"></div></div>
+    <div class="subhead">Open Tasks</div><div id="todayTasks"></div>
     <div id="completedWrap"><div class="subhead">Completed</div><div id="completedTasks"></div></div>
   </div>
 
@@ -75,8 +74,8 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 
 <script>
 /* ---------- CONFIG ---------- */
-const SUPABASE_URL = "https://rhgnnvmzautqupwbhymq.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_0VdfBOsd53Rbwb4EN1Eorw_BEFIVcvI";
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
 const sb = (SUPABASE_URL.startsWith("http") && !SUPABASE_ANON_KEY.startsWith("PASTE_")) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 /* ---------- STATE ---------- */
@@ -126,14 +125,22 @@ async function loadEmployeeTasks(){
   $("employeeSession").textContent=`${currentPerson.name} • ${currentPerson.dealer_name}`;
   renderPerson();
 }
+function elapsedDays(t){
+  const start=new Date(t.created_at);
+  const end=(t.completed_at&&["done","late"].includes(t.status))?new Date(t.completed_at):new Date();
+  if(Number.isNaN(start.getTime())||Number.isNaN(end.getTime()))return 0;
+  return Math.max(0,Math.floor((end-start)/86400000));
+}
 function renderPerson(){
-  const t=today();const my=tasks.filter(x=>x.assigned_to===currentPerson.id);
-  const todayTasks=my.filter(x=>x.due_date===t && !["done","late"].includes(x.status));
-  const overdue=my.filter(x=>x.due_date<t && !["done","late"].includes(x.status));
+  const my=tasks.filter(x=>x.assigned_to===currentPerson.id);
+  const open=my.filter(x=>!["done","late"].includes(x.status)).sort((a,b)=>{
+    const ad=a.due_date,bd=b.due_date;
+    return ad.localeCompare(bd)||new Date(a.created_at)-new Date(b.created_at);
+  });
   const completed=my.filter(x=>["done","late"].includes(x.status)).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at));
-  $("todayTasks").innerHTML=todayTasks.length?todayTasks.map(renderEmployeeCard).join(""):'<div class="empty">No open tasks for today. 🎉</div>';
-  $("overdueWrap").classList.toggle("hidden",!overdue.length);$("overdueTasks").innerHTML=overdue.map(x=>renderEmployeeCard(x,true)).join("");
-  $("completedWrap").classList.toggle("hidden",!completed.length);$("completedTasks").innerHTML=completed.slice(0,12).map(renderEmployeeCard).join("");
+  $("todayTasks").innerHTML=open.length?open.map(renderEmployeeCard).join(""):'<div class="empty">No open tasks. 🎉</div>';
+  $("completedWrap").classList.toggle("hidden",!completed.length);
+  $("completedTasks").innerHTML=completed.slice(0,12).map(renderEmployeeCard).join("");
   renderStreak(my);
 }
 function renderStreak(my){
@@ -143,11 +150,14 @@ function renderStreak(my){
   $("odoDigits").innerHTML=String(n).padStart(3,"0").split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
 }
 function renderEmployeeCard(t,overdue=false){
+  const isOverdue=!['done','late'].includes(t.status)&&t.due_date<today();
   const late=t.status==="late", done=t.status==="done";
-  const cls=done||late?"done":(t.status==="help"?"help":(overdue?"overdue":""));
+  const cls=done||late?"done":(t.status==="help"?"help":(isOverdue?"overdue":""));
   const status=done?"COMPLETED":late?"COMPLETED LATE":t.status==="help"?"HELP REQUESTED":"PENDING";
-  let h=`<div class="jobcard ${cls}"><div class="jc-top"><div><div class="jc-id">JC-${t.id.slice(-6).toUpperCase()}</div><div class="jc-title">${escapeHtml(t.title)}</div></div><div class="jc-due ${overdue?"overdue-txt":""}">${fmtDate(t.due_date)}</div></div><span class="status ${t.status}">${status}</span>`;
-  if(t.status==="help"&&t.help_note)h+=`<div class="help-note">Help requested: ${escapeHtml(t.help_note)}</div>`;
+  const elapsed=elapsedDays(t);
+  let h=`<div class="jobcard ${cls}"><div class="jc-top"><div><div class="jc-id">TASK-${t.id.slice(-6).toUpperCase()}</div><div class="jc-title">${escapeHtml(t.title)}</div></div><div class="jc-due ${isOverdue?"overdue-txt":""}">Due: ${fmtDate(t.due_date)}</div></div><div class="small">Elapsed since assigned: <b>${elapsed} day${elapsed===1?"":"s"}</b>${isOverdue?' • <span class="danger-text">OVERDUE</span>':''}</div><span class="status ${t.status}">${status}</span>`;
+  if(t.help_note)h+=`<div class="help-note"><b>Help requested:</b> ${escapeHtml(t.help_note)}</div>`;
+  if(t.help_response)h+=`<div class="help-note" style="color:var(--success);border-color:rgba(73,182,131,.3);background:rgba(73,182,131,.08)"><b>Manager response:</b> ${escapeHtml(t.help_response)}${t.help_responded_at?`<div class="small">Replied: ${fmtTs(t.help_responded_at)}</div>`:""}</div>`;
   if(done||late)h+=`<div class="small">Completed: ${fmtTs(t.completed_at)}</div>`;
   if(!done&&!late)h+=`<div class="actions"><button class="btn btn-done" onclick="confirmDone('${t.id}')">✓ Done</button><button class="btn btn-help" onclick="toggleHelp('${t.id}')">Need help</button></div><div class="help-box hidden" id="help-${t.id}"><textarea id="note-${t.id}" placeholder="What do you need help with?"></textarea><button class="btn btn-accent btn-wide" onclick="sendHelp('${t.id}')">Send to manager</button></div>`;
   return h+"</div>";
@@ -179,7 +189,15 @@ function renderBoard(){
   const groups=dealers.map(d=>{const pp=people.filter(p=>p.dealer_id===d.id);return `<div class="board-person"><h3>${escapeHtml(d.name)}</h3>`+pp.map(p=>{const ts=tasks.filter(t=>t.assigned_to===p.id).sort((a,b)=>a.due_date.localeCompare(b.due_date));return `<div style="margin-bottom:14px"><div class="small" style="margin-bottom:6px;color:var(--text)">${escapeHtml(p.name)}</div>`+(ts.length?ts.map(renderManagerTask).join(""):'<div class="small">No tasks</div>')+"</div>"}).join("")+"</div>"}).join("");
   $("tab-board").innerHTML=groups||'<div class="empty">No data</div>';
 }
-function renderManagerTask(t){const overdue=!["done","late"].includes(t.status)&&t.due_date<today();return `<div class="board-card"><div class="board-top"><div><div class="jc-id">JC-${t.id.slice(-6).toUpperCase()} • ${fmtDate(t.due_date)}</div><div style="font-weight:600;font-size:13px;margin-top:3px">${escapeHtml(t.title)}</div></div><span class="mini ${t.status}">${t.status==="late"?"COMPLETED LATE":t.status.toUpperCase()}</span></div>${t.help_note?`<div class="help-note">${escapeHtml(t.help_note)}</div>`:""}${t.completed_at?`<div class="small">Completed: ${fmtTs(t.completed_at)}</div>`:""}${overdue?'<div class="small danger-text">OVERDUE</div>':""}<div class="actions"><button class="btn btn-secondary" onclick="editTask('${t.id}')">Edit</button>${t.status==="help"?`<button class="btn btn-secondary" onclick="resolveHelp('${t.id}')">Resolve</button>`:""}${["done","late"].includes(t.status)?`<button class="btn btn-secondary" onclick="reopenTask('${t.id}')">Reopen</button>`:""}<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></div></div>`}
+function renderManagerTask(t){
+  const overdue=!['done','late'].includes(t.status)&&t.due_date<today();
+  return `<div class="board-card"><div class="board-top"><div><div class="jc-id">JC-${t.id.slice(-6).toUpperCase()} • ${fmtDate(t.due_date)}</div><div style="font-weight:600;font-size:13px;margin-top:3px">${escapeHtml(t.title)}</div></div><span class="mini ${t.status}">${t.status==="late"?"COMPLETED LATE":t.status.toUpperCase()}</span></div>
+  ${t.help_note?`<div class="help-note"><b>Help requested:</b> ${escapeHtml(t.help_note)}</div>`:""}
+  ${t.help_response?`<div class="help-note" style="color:var(--success);border-color:rgba(73,182,131,.3);background:rgba(73,182,131,.08)"><b>Manager response:</b> ${escapeHtml(t.help_response)}${t.help_responded_at?`<div class="small">Replied: ${fmtTs(t.help_responded_at)}</div>`:""}</div>`:""}
+  ${t.completed_at?`<div class="small">Completed: ${fmtTs(t.completed_at)}</div>`:""}${overdue?'<div class="small danger-text">OVERDUE</div>':""}
+  ${t.status==="help"?`<div class="reply-box"><textarea id="reply-${t.id}" placeholder="Type your answer to the employee..."></textarea><button class="btn btn-accent btn-wide" onclick="replyAndResolve('${t.id}')">Reply & Resolve</button></div>`:""}
+  <div class="actions"><button class="btn btn-secondary" onclick="editTask('${t.id}')">Edit</button>${['done','late'].includes(t.status)?`<button class="btn btn-secondary" onclick="reopenTask('${t.id}')">Reopen</button>`:""}<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></div></div>`;
+}
 async function editTask(id){
   const t=tasks.find(x=>x.id===id); if(!t)return;
   const title=prompt("Task title:",t.title); if(title===null)return;
@@ -195,7 +213,12 @@ async function editTask(id){
   }catch(e){toast(e.message||"Could not update")}
 }
 async function deleteTask(id){if(!confirm("Delete this task?"))return;try{await managerCall("manager_delete_task",{p_task_id:id});toast("Task deleted");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not delete")}}
-async function resolveHelp(id){try{await managerCall("manager_set_task_status",{p_task_id:id,p_status:"pending"});toast("Help request resolved");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not resolve")}}
+async function replyAndResolve(id){
+  const response=$("reply-"+id)?.value.trim();
+  if(!response)return toast("Enter a response first");
+  try{await managerCall("manager_reply_help",{p_task_id:id,p_response:response});toast("Response sent and help resolved");await loadManagerData();renderBoard()}
+  catch(e){toast(e.message||"Could not send response")}
+}
 async function reopenTask(id){if(!confirm("Reopen this completed task?"))return;try{await managerCall("manager_set_task_status",{p_task_id:id,p_status:"pending"});toast("Task reopened");await loadManagerData();renderBoard()}catch(e){toast(e.message||"Could not reopen")}}
 function renderTeam(){$("peopleList").innerHTML=dealers.map(d=>`<div class="board-person"><h3>${escapeHtml(d.name)}</h3>`+people.filter(p=>p.dealer_id===d.id).map(p=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${escapeHtml(p.name)}</b><div class="small">PIN protected</div></div><button class="btn btn-danger" onclick="removePerson('${p.id}')">Remove</button></div></div>`).join("")+"</div>").join("")}
 async function addPerson(){const did=$("newPersonDealer").value,name=$("newPersonName").value.trim(),pin=$("newPersonPin").value.trim();if(!name||!/^\d{4,6}$/.test(pin))return toast("Name + 4–6 digit PIN required");try{await rpc("manager_add_person",{p_manager_pin:$("managerPin").value,p_dealer_id:did,p_name:name,p_employee_pin:pin});toast("Employee added");$("newPersonName").value="";$("newPersonPin").value="";await loadManagerData();renderTeam()}catch(e){toast(e.message||"Could not add employee")}}
