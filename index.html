@@ -79,21 +79,24 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
   </div>
 
   <div id="screen-manager-dealer" class="hidden">
-    <div class="back-row"><button class="back-btn" onclick="openManager()">← Change manager</button></div>
-    <div class="section-label">Select Dealership</div>
-    <div class="small" style="margin-bottom:10px">Choose the dealership you want to manage. Dashboard figures and task data will be shown for this location only.</div>
-    <div id="managerDealerGrid"></div>
+    <div class="back-row"><button class="back-btn" onclick="openManager()">← Change manager</button><button class="back-btn" style="float:right" onclick="goHome()">Exit</button></div>
+    <div class="session" id="managerHubSession"></div>
+    <div class="section-label">Manager Dashboard</div>
+    <div class="small" style="margin-bottom:12px">Manage your profile, dealerships and manager access here. Select a dealership below to open its location dashboard.</div>
+    <div class="manager-card"><div class="section-label">My Manager Profile</div><div class="field"><label>Manager name</label><input id="myManagerName" placeholder="Name"></div><div class="field"><label>New PIN</label><input id="myManagerNewPin" inputmode="numeric" maxlength="8" placeholder="Leave blank to keep current PIN"></div><button class="btn btn-accent btn-wide" onclick="updateMyManagerProfile()">Save Profile</button></div>
+    <div class="manager-card"><div class="section-label">Add Dealership</div><div class="field"><label>Dealership name</label><input id="newDealerName" placeholder="Enter dealership name"></div><button class="btn btn-accent btn-wide" onclick="createMyDealership()">Add Dealership</button><div class="small" style="margin-top:8px">After adding it, open the dealership and add manpower under Team.</div></div>
+    <div id="adminManagerSection" class="hidden"><div class="manager-card"><div class="section-label">Add New Manager</div><div class="field"><label>Manager name</label><input id="newManagerName" placeholder="Name"></div><div class="field"><label>Manager PIN</label><input id="newManagerPin" inputmode="numeric" maxlength="8" placeholder="4–8 digits"></div><div class="field"><label>Dealerships managed</label><div class="chips" id="managerDealerChips"></div></div><button class="btn btn-accent btn-wide" onclick="addManager()">Add Manager</button></div><div class="subhead">Active / Inactive Managers</div><div id="managerAdminList"></div></div>
+    <div class="subhead">My Active Dealerships</div><div id="managerDealerGrid"></div>
   </div>
 
   <div id="screen-manager" class="hidden">
     <div class="back-row"><button class="back-btn" onclick="selectManagerDealershipScreen()">← Change dealership</button><button class="back-btn" style="float:right" onclick="goHome()">Exit</button></div>
     <div class="session" id="managerSession"></div>
-    <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="requests" onclick="switchTab('requests')">Requests</div><div class="tab" data-tab="recurring" onclick="switchTab('recurring')">Recurring Tasks</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div><div id="managerAdminTab" class="tab" data-tab="managers" onclick="switchTab('managers')">Manager</div></div>
+    <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="requests" onclick="switchTab('requests')">Requests</div><div class="tab" data-tab="recurring" onclick="switchTab('recurring')">Recurring Tasks</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div></div>
     <div id="tab-dashboard"></div>
     <div id="tab-assign" class="hidden">
       <div class="field"><label>Task title</label><textarea id="taskTitle" rows="2" placeholder="e.g. Follow up on Pro X customer complaint"></textarea></div>
       <div class="field"><label>Due date</label><input id="taskDue" type="date"></div>
-      <div class="small" style="margin:-5px 0 12px">Dealership: <b id="assignDealerLabel"></b></div>
       <div class="field"><label>Assign to</label><div class="chips" id="assignChips"></div></div>
       <button class="btn btn-accent btn-wide" onclick="assignTask()">Assign task</button>
     </div>
@@ -102,21 +105,14 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div id="tab-recurring" class="hidden">
       <div class="manager-card"><div class="section-label">Create Recurring Task</div><div class="small" style="margin:5px 0 12px">Configure a task once. The system creates normal task occurrences automatically.</div>
       <div class="field"><label>Task title</label><textarea id="recTitle" rows="2" placeholder="e.g. Submit weekly service report"></textarea></div>
-      <div class="small" style="margin:-2px 0 12px">Dealership: <b id="recDealerLabel"></b></div><div class="field"><label>Recurrence type</label><select id="recType" onchange="renderRecurrenceSchedule()"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly_fixed">Monthly — Fixed Date</option><option value="monthly_due_by">Monthly — Due By</option><option value="monthly_weekday">Monthly — Week & Day</option></select></div></div>
+      <div class="field"><label>Recurrence type</label><select id="recType" onchange="renderRecurrenceSchedule()"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly_fixed">Monthly — Fixed Date</option><option value="monthly_due_by">Monthly — Due By</option><option value="monthly_weekday">Monthly — Week & Day</option></select></div></div>
       <div id="recSchedule" class="recurrence-box"></div><div class="field"><label>Assign to</label><div class="chips" id="recAssignChips"></div></div>
       <div class="two"><div class="field"><label>Start date</label><input id="recStart" type="date"></div><div class="field"><label>End date (optional)</label><input id="recEnd" type="date"></div></div>
       <button class="btn btn-accent btn-wide" onclick="createRecurringTask()">Create Recurring Task</button></div>
-      <div class="subhead">Active / Paused Recurring Tasks</div><div id="recurringList"></div>
-    </div>
-    <div id="tab-managers" class="hidden">
-      <div class="manager-card"><div class="section-label">My Manager Profile</div><div class="field"><label>Manager name</label><input id="myManagerName" placeholder="Name"></div><div class="field"><label>New PIN</label><input id="myManagerNewPin" inputmode="numeric" maxlength="8" placeholder="Leave blank to keep current PIN"></div><button class="btn btn-accent btn-wide" onclick="updateMyManagerProfile()">Save Profile</button></div>
-      <div class="manager-card"><div class="section-label">Add Dealership Under Me</div><div class="field"><label>Available dealership</label><select id="addMyDealerSelect"></select></div><button class="btn btn-secondary btn-wide" onclick="addMyDealership()">+ Add Dealership</button></div>
-      <div class="subhead">My Dealerships</div><div id="myDealerList"></div>
-      <div id="adminManagerSection" class="hidden"><div class="manager-card"><div class="section-label">Add Manager</div><div class="field"><label>Manager name</label><input id="newManagerName" placeholder="Name"></div><div class="field"><label>Manager PIN</label><input id="newManagerPin" inputmode="numeric" maxlength="8" placeholder="4–8 digits"></div><div class="field"><label>Dealerships managed</label><div class="chips" id="managerDealerChips"></div></div><button class="btn btn-accent btn-wide" onclick="addManager()">Add manager</button></div>
-      <div class="subhead">Active / Inactive Managers</div><div id="managerAdminList"></div></div>
+      <div id="recurringList"></div>
     </div>
     <div id="tab-team" class="hidden">
-      <div class="manager-card"><div class="small" style="margin-bottom:12px">Dealership: <b id="teamDealerLabel"></b></div><div class="field"><label>Employee name</label><input id="newPersonName" placeholder="Name"></div><div class="field"><label>Employee PIN</label><input id="newPersonPin" inputmode="numeric" maxlength="6" placeholder="4–6 digits"></div><button class="btn btn-accent btn-wide" onclick="addPerson()">Add employee</button></div>
+      <div class="manager-card"><div class="small" style="margin-bottom:12px">Add manpower to the selected dealership.</div><div class="field"><label>Employee name</label><input id="newPersonName" placeholder="Name"></div><div class="field"><label>Employee PIN</label><input id="newPersonPin" inputmode="numeric" maxlength="6" placeholder="4–6 digits"></div><button class="btn btn-accent btn-wide" onclick="addPerson()">Add employee</button></div>
       <div id="peopleList"></div>
     </div>
   </div>
@@ -272,7 +268,6 @@ async function managerLogin(){
     const profile=await rpc("manager_get_profile",{p_manager_id:currentManager.id,p_pin:$('managerPin').value});
     currentManager=profile.manager; dealers=profile.dealers||[];
     if(!dealers.length){managerUnlocked=false;return toast("No dealerships are assigned to this manager")}
-    $('managerAdminTab').classList.remove('hidden');
     await loadAllDealersForManager();
     await selectManagerDealershipScreen();
   }catch(e){toast("Incorrect manager PIN")}
@@ -281,10 +276,20 @@ async function managerCall(name,args={}){if(!managerUnlocked||!currentManager)th
 async function selectManagerDealershipScreen(){
   if(!currentManager)return openManager();
   if(!dealers.length){const p=await managerCall("manager_get_profile");dealers=p.dealers||[]}
-  renderManagerDealerships();showScreen("screen-manager-dealer");
+  $("managerHubSession").textContent=currentManager.name;
+  renderManagerHub();
+  showScreen("screen-manager-dealer");
 }
 function renderManagerDealerships(){
   $('managerDealerGrid').innerHTML=dealers.map(d=>`<div class="dealer-select-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b>${escapeHtml(d.name)}</b><div class="small">Open this dealership dashboard</div></div><button class="btn btn-accent" onclick="enterManagerDealership('${d.id}')">Open</button></div></div>`).join('')||'<div class="empty">No dealerships assigned.</div>';
+}
+function renderManagerHub(){
+  $("myManagerName").value=currentManager?.name||"";
+  $("myManagerNewPin").value="";
+  renderManagerDealerships();
+  const admin=!!currentManager?.is_admin;
+  $("adminManagerSection").classList.toggle("hidden",!admin);
+  if(admin){renderManagerDealerChips();renderManagerAdminList();}
 }
 async function enterManagerDealership(id){
   if(!dealers.some(d=>d.id===id))return toast("Dealership not assigned to this manager");
@@ -302,13 +307,10 @@ async function loadManagerData(){
 }
 function populateDealerContext(){
   const dealer=dealers.find(d=>d.id===currentManagerDealerId);
-  $('assignDealerLabel').textContent=dealer?.name||'-';
-  $('recDealerLabel').textContent=dealer?.name||'-';
-  $('teamDealerLabel').textContent=dealer?.name||'-';
   renderAssignPeople();renderRecurringPeople();
 }
 function currentDealerData(){return {dealer:dealers.find(d=>d.id===currentManagerDealerId),people:people.filter(p=>p.dealer_id===currentManagerDealerId),tasks:tasks.filter(t=>t.dealer_id===currentManagerDealerId),requests:requests.filter(r=>r.dealer_id===currentManagerDealerId)}}
-function switchTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));['dashboard','assign','board','requests','recurring','team','managers'].forEach(x=>$('tab-'+x).classList.toggle('hidden',x!==name));if(name==='dashboard')renderDashboard();if(name==='assign')renderAssignPeople();if(name==='board')renderBoard();if(name==='requests')renderRequests();if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList()}if(name==='team')renderTeam();if(name==='managers'){renderManagerAdmin();loadAllDealersForManager()}}
+function switchTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));['dashboard','assign','board','requests','recurring','team'].forEach(x=>$('tab-'+x).classList.toggle('hidden',x!==name));if(name==='dashboard')renderDashboard();if(name==='assign')renderAssignPeople();if(name==='board')renderBoard();if(name==='requests')renderRequests();if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList()}if(name==='team')renderTeam();}
 function renderDashboard(){
   const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(t.status)).length, late=d.tasks.filter(t=>t.status==='late').length, done=d.tasks.filter(t=>t.status==='done').length, help=d.tasks.filter(t=>t.status==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
   $('tab-dashboard').innerHTML=`<div class="manager-card"><b>${escapeHtml(d.dealer?.name||'Dealership')}</b><div class="small">Manager view is restricted to this dealership.</div></div><div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open Tasks</div></div><div class="manager-card"><b>${done}</b><div class="small">Completed</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed Late</div></div><div class="manager-card"><b>${help}</b><div class="small">Task Help Requests</div></div><div class="manager-card"><b>${openRequests}</b><div class="small">Open Requests</div></div><div class="manager-card"><b>${d.people.length}</b><div class="small">Active Employees</div></div></div>`;
@@ -337,7 +339,12 @@ function toggleWeekday(el){el.classList.toggle('selected')}
 function getRecurringSchedule(){const type=$('recType').value;if(type==='daily')return {};if(type==='weekly')return {weekdays:[...document.querySelectorAll('#recSchedule .day-chip.selected')].map(x=>Number(x.dataset.day))};if(type==='monthly_fixed')return {day_of_month:Number($('recDay').value)};if(type==='monthly_due_by')return {due_by_day:Number($('recDueBy').value)};return {week_no:Number($('recWeek').value),weekday:Number($('recWeekday').value)}}
 function recurrenceLabel(r){const s=r.schedule||{};if(r.recurrence_type==='daily')return 'Daily';if(r.recurrence_type==='weekly')return `Weekly • ${(s.weekdays||[]).map(n=>['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][n]).join(', ')}`;if(r.recurrence_type==='monthly_fixed')return `Monthly • Day ${s.day_of_month}`;if(r.recurrence_type==='monthly_due_by')return `Monthly • Due by ${s.due_by_day}`;return `Monthly • ${['','1st','2nd','3rd','4th','5th'][s.week_no]} ${['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][s.weekday]}`}
 async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'&&!schedule.weekdays.length)return toast('Select at least one weekday');if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();await loadManagerData();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
-function renderRecurringList(){if(!$('recurringList'))return;const list=[...recurringTasks].filter(r=>!currentManagerDealerId||r.dealer_id===currentManagerDealerId).sort((a,b)=>Number(b.active)-Number(a.active)||new Date(b.created_at)-new Date(a.created_at));$('recurringList').innerHTML=list.length?list.map(r=>`<div class="recurring-card ${r.active?'':'paused'}"><div class="recurring-top"><div><div class="recurring-title">${escapeHtml(r.title)}</div><div class="recurring-meta">${escapeHtml(dealerName(r.dealer_id))} • ${escapeHtml(personName(r.assigned_to))}<br>${recurrenceLabel(r)} • Start ${fmtDate(r.start_date)}${r.end_date?' • End '+fmtDate(r.end_date):''}</div></div><span class="mini ${r.active?'done':''}">${r.active?'ACTIVE':'PAUSED'}</span></div><div class="recurring-actions"><button class="btn btn-secondary" onclick="toggleRecurring('${r.id}',${!r.active})">${r.active?'Pause':'Resume'}</button><button class="btn btn-secondary" onclick="editRecurring('${r.id}')">Edit</button><button class="btn btn-danger" onclick="deleteRecurring('${r.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring tasks configured for this dealership.</div>'}
+function renderRecurringList(){
+  if(!$('recurringList'))return;
+  const list=[...recurringTasks].filter(r=>!currentManagerDealerId||r.dealer_id===currentManagerDealerId).sort((a,b)=>Number(b.active)-Number(a.active)||new Date(b.created_at)-new Date(a.created_at));
+  const cards=list.length?list.map(r=>`<div class="recurring-card ${r.active?'':'paused'}"><div class="recurring-top"><div><div class="recurring-title">${escapeHtml(r.title)}</div><div class="recurring-meta">${escapeHtml(personName(r.assigned_to))}<br>${recurrenceLabel(r)} • Start ${fmtDate(r.start_date)}${r.end_date?' • End '+fmtDate(r.end_date):''}</div></div><span class="mini ${r.active?'done':''}">${r.active?'ACTIVE':'PAUSED'}</span></div><div class="recurring-actions"><button class="btn btn-secondary" onclick="toggleRecurring('${r.id}',${!r.active})">${r.active?'Pause':'Resume'}</button><button class="btn btn-secondary" onclick="editRecurring('${r.id}')">Edit</button><button class="btn btn-danger" onclick="deleteRecurring('${r.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring tasks configured for this dealership.</div>';
+  $('recurringList').innerHTML='<div class="subhead">Active / Paused Recurring Tasks</div>'+cards;
+}
 async function toggleRecurring(id,active){try{await managerCall('manager_set_recurring_active',{p_recurring_id:id,p_active:active});toast(active?'Recurring task resumed':'Recurring task paused');await loadManagerData()}catch(e){toast(e.message||'Could not update recurring task')}}
 async function deleteRecurring(id){if(!confirm('Delete this recurring task rule? Existing generated task history will remain.'))return;try{await managerCall('manager_delete_recurring_task',{p_recurring_id:id});toast('Recurring task deleted');await loadManagerData()}catch(e){toast(e.message||'Could not delete recurring task')}}
 async function editRecurring(id){const r=recurringTasks.find(x=>x.id===id);if(!r)return;const title=prompt('Task title:',r.title);if(title===null)return;const start=prompt('Start date (YYYY-MM-DD):',r.start_date);if(start===null)return;const end=prompt('End date (YYYY-MM-DD, blank for none):',r.end_date||'');if(end===null)return;if(end&&end<start)return toast('End date cannot be before start date');try{await managerCall('manager_update_recurring_task',{p_recurring_id:id,p_title:title.trim(),p_start_date:start,p_end_date:end||null});toast('Recurring task updated');await loadManagerData()}catch(e){toast(e.message||'Could not update recurring task')}}
@@ -345,50 +352,17 @@ function renderTeam(){const d=currentDealerData();$('peopleList').innerHTML=d.pe
 async function addPerson(){const did=currentManagerDealerId,name=$('newPersonName').value.trim(),pin=$('newPersonPin').value.trim();if(!name||!/^[0-9]{4,6}$/.test(pin))return toast('Name + 4–6 digit PIN required');try{await managerCall('manager_add_person',{p_dealer_id:did,p_name:name,p_employee_pin:pin});toast('Employee added');$('newPersonName').value='';$('newPersonPin').value='';await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not add employee')}}
 async function removePerson(id){if(!confirm('Remove this employee? Existing tasks will remain in history.'))return;try{await managerCall('manager_remove_person',{p_person_id:id});toast('Employee removed');await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not remove employee')}}
 
-function renderManagerAdmin(){
-  if(!currentManager)return;
-  $('myManagerName').value=currentManager.name||'';
-  $('myManagerNewPin').value='';
-  renderMyDealerships();
-  renderAddMyDealershipOptions();
-  const admin=currentManager.is_admin;
-  $('adminManagerSection').classList.toggle('hidden',!admin);
-  if(admin){renderManagerDealerChips();renderManagerAdminList()}
-}
-function renderMyDealerships(){
-  $('myDealerList').innerHTML=dealers.length?dealers.map(d=>`<div class="manager-card"><b>${escapeHtml(d.name)}</b><div class="small">Managed by you</div></div>`).join(''):'<div class="empty">No dealerships assigned.</div>';
-}
-function renderAddMyDealershipOptions(){
-  const current=new Set(dealers.map(d=>d.id));
-  const available=(window.allDealersForManager||[]).filter(d=>!current.has(d.id));
-  $('addMyDealerSelect').innerHTML=available.length?'<option value="">Select dealership</option>'+available.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join(''):'<option value="">All active dealerships already added</option>';
-}
-async function loadAllDealersForManager(){
-  window.allDealersForManager=await rpc('public_get_dealers');
-  renderAddMyDealershipOptions();
-}
 async function updateMyManagerProfile(){
-  const name=$('myManagerName').value.trim(),pin=$('myManagerNewPin').value.trim();
-  if(!name)return toast('Manager name is required');
-  if(pin&&!/^[0-9]{4,8}$/.test(pin))return toast('PIN must be 4–8 digits');
-  try{
-    await managerCall('manager_update_profile',{p_name:name,p_new_pin:pin||null});
-    currentManager.name=name;
-    if(pin){$('managerPin').value=pin;toast('Name and PIN updated')}else toast('Profile updated');
-    $('managerLoginLabel').textContent=name;$('managerSession').textContent=`${name} • ${dealerName(currentManagerDealerId)}`;
-  }catch(e){toast(e.message||'Could not update profile')}
+  const name=$("myManagerName").value.trim(),pin=$("myManagerNewPin").value.trim();
+  if(!name)return toast("Manager name is required");
+  if(pin&&!/^[0-9]{4,8}$/.test(pin))return toast("PIN must be 4–8 digits");
+  try{const updated=await managerCall("manager_update_profile",{p_name:name,p_new_pin:pin||null});currentManager={...currentManager,name:updated?.name||name};$("managerLoginLabel").textContent=currentManager.name;$("managerHubSession").textContent=currentManager.name;toast(pin?"Name and PIN updated":"Profile updated")}catch(e){toast(e.message||"Could not update profile")}
 }
-async function addMyDealership(){
-  const did=$('addMyDealerSelect').value;if(!did)return toast('Select a dealership first');
-  try{
-    await managerCall('manager_add_dealership',{p_dealer_id:did});
-    const profile=await managerCall('manager_get_profile');
-    dealers=profile.dealers||[];
-    toast('Dealership added');
-    renderManagerDealerships();renderManagerAdmin();
-  }catch(e){toast(e.message||'Could not add dealership')}
+async function createMyDealership(){
+  const name=$("newDealerName").value.trim(); if(!name)return toast("Enter dealership name");
+  try{const result=await managerCall("manager_create_dealership",{p_name:name});const profile=await managerCall("manager_get_profile");dealers=profile.dealers||[];$("newDealerName").value="";await loadAllDealersForManager();renderManagerHub();toast("Dealership added");if(result?.id)setTimeout(()=>enterManagerDealership(result.id),250)}catch(e){toast(e.message||"Could not add dealership")}
 }
-function renderManagerDealerChips(){ $('managerDealerChips').innerHTML=(window.allDealersForManager||dealers).map(d=>`<div class="chip ${selectedManagerDealers.has(d.id)?'selected':''}" onclick="toggleManagerDealer('${d.id}')">${escapeHtml(d.name)}</div>`).join('') }
+function renderManagerDealerChips(){ $("managerDealerChips").innerHTML=(window.allDealersForManager||[]).map(d=>`<div class="chip ${selectedManagerDealers.has(d.id)?'selected':''}" onclick="toggleManagerDealer('${d.id}')">${escapeHtml(d.name)}</div>`).join("") }
 function toggleManagerDealer(id){selectedManagerDealers.has(id)?selectedManagerDealers.delete(id):selectedManagerDealers.add(id);renderManagerDealerChips()}
 async function addManager(){const name=$('newManagerName').value.trim(),pin=$('newManagerPin').value.trim();if(!name||!/^[0-9]{4,8}$/.test(pin)||!selectedManagerDealers.size)return toast('Enter name, 4–8 digit PIN and at least one dealership');try{await managerCall('manager_create_manager',{p_name:name,p_manager_pin:pin,p_dealer_ids:[...selectedManagerDealers]});toast('Manager added');$('newManagerName').value='';$('newManagerPin').value='';selectedManagerDealers.clear();await renderManagerAdminList();renderManagerDealerChips()}catch(e){toast(e.message||'Could not add manager')}}
 async function renderManagerAdminList(){try{const list=await managerCall('manager_get_managers');$('managerAdminList').innerHTML=list.length?list.map(m=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>${escapeHtml(m.name)}</b><div class="small">${m.is_admin?'Administrator':'Manager'} • ${m.active?'ACTIVE':'INACTIVE'}</div><div class="small">${(m.dealerships||[]).map(escapeHtml).join(' • ')||'No dealerships assigned'}</div></div>${m.id!==currentManager.id?`<button class="btn ${m.active?'btn-danger':'btn-secondary'}" onclick="toggleManagerActive('${m.id}',${!m.active})">${m.active?'Deactivate':'Activate'}</button>`:''}</div></div>`).join(''):'<div class="empty">No managers found.</div>'}catch(e){toast(e.message||'Could not load managers')}}
