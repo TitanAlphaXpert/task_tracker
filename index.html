@@ -84,7 +84,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="section-label">Manager Dashboard</div>
     <div class="small" style="margin-bottom:12px">Manage your profile, dealerships and manager access here. Select a dealership below to open its location dashboard.</div>
     <div class="manager-card"><div class="section-label">My Manager Profile</div><div class="field"><label>Manager name</label><input id="myManagerName" placeholder="Name"></div><div class="field"><label>New PIN</label><input id="myManagerNewPin" inputmode="numeric" maxlength="8" placeholder="Leave blank to keep current PIN"></div><button class="btn btn-accent btn-wide" onclick="updateMyManagerProfile()">Save Profile</button></div>
-    <div class="manager-card"><div class="section-label">Add Dealership</div><div class="field"><label>Dealership name</label><input id="newDealerName" placeholder="Enter dealership name"></div><button class="btn btn-accent btn-wide" onclick="createMyDealership()">Add Dealership</button><div class="small" style="margin-top:8px">After adding it, open the dealership and add manpower under Team.</div></div>
+    <div class="manager-card"><div class="section-label">Add Dealership</div><div class="field"><label>Dealership name</label><input id="newDealerName" placeholder="Enter dealership name"></div><button class="btn btn-accent btn-wide" onclick="createMyDealership()">Add Dealership</button><div class="small" style="margin-top:8px">The dealership will appear under My Active Dealerships. Open it to manage manpower and tasks.</div></div>
     <div id="adminManagerSection" class="hidden"><div class="manager-card"><div class="section-label">Add New Manager</div><div class="field"><label>Manager name</label><input id="newManagerName" placeholder="Name"></div><div class="field"><label>Manager PIN</label><input id="newManagerPin" inputmode="numeric" maxlength="8" placeholder="4–8 digits"></div><div class="field"><label>Dealerships managed</label><div class="chips" id="managerDealerChips"></div></div><button class="btn btn-accent btn-wide" onclick="addManager()">Add Manager</button></div><div class="subhead">Active / Inactive Managers</div><div id="managerAdminList"></div></div>
     <div class="subhead">My Active Dealerships</div><div id="managerDealerGrid"></div>
   </div>
@@ -260,6 +260,9 @@ function selectManager(id){
   $("managerLoginLabel").textContent=currentManager.name; $("managerPin").value="";
   showScreen("screen-manager-pin"); setTimeout(()=>$('managerPin').focus(),100);
 }
+async function loadAllDealersForManager(){
+  window.allDealersForManager=await rpc("public_get_dealers");
+}
 async function managerLogin(){
   if(!currentManager)return toast("Select a manager first");
   try{
@@ -267,7 +270,6 @@ async function managerLogin(){
     managerUnlocked=true;
     const profile=await rpc("manager_get_profile",{p_manager_id:currentManager.id,p_pin:$('managerPin').value});
     currentManager=profile.manager; dealers=profile.dealers||[];
-    if(!dealers.length){managerUnlocked=false;return toast("No dealerships are assigned to this manager")}
     await loadAllDealersForManager();
     await selectManagerDealershipScreen();
   }catch(e){toast("Incorrect manager PIN")}
@@ -356,11 +358,11 @@ async function updateMyManagerProfile(){
   const name=$("myManagerName").value.trim(),pin=$("myManagerNewPin").value.trim();
   if(!name)return toast("Manager name is required");
   if(pin&&!/^[0-9]{4,8}$/.test(pin))return toast("PIN must be 4–8 digits");
-  try{const updated=await managerCall("manager_update_profile",{p_name:name,p_new_pin:pin||null});currentManager={...currentManager,name:updated?.name||name};$("managerLoginLabel").textContent=currentManager.name;$("managerHubSession").textContent=currentManager.name;toast(pin?"Name and PIN updated":"Profile updated")}catch(e){toast(e.message||"Could not update profile")}
+  try{const updated=await managerCall("manager_update_profile",{p_name:name,p_new_pin:pin||null});currentManager={...currentManager,name:updated?.name||name};if(pin)$("managerPin").value=pin;$("managerLoginLabel").textContent=currentManager.name;$("managerHubSession").textContent=currentManager.name;toast(pin?"Name and PIN updated":"Profile updated")}catch(e){toast(e.message||"Could not update profile")}
 }
 async function createMyDealership(){
   const name=$("newDealerName").value.trim(); if(!name)return toast("Enter dealership name");
-  try{const result=await managerCall("manager_create_dealership",{p_name:name});const profile=await managerCall("manager_get_profile");dealers=profile.dealers||[];$("newDealerName").value="";await loadAllDealersForManager();renderManagerHub();toast("Dealership added");if(result?.id)setTimeout(()=>enterManagerDealership(result.id),250)}catch(e){toast(e.message||"Could not add dealership")}
+  try{await managerCall("manager_create_dealership",{p_name:name});const profile=await managerCall("manager_get_profile");dealers=profile.dealers||[];$("newDealerName").value="";await loadAllDealersForManager();renderManagerHub();toast("Dealership added")}catch(e){toast(e.message||"Could not add dealership")}
 }
 function renderManagerDealerChips(){ $("managerDealerChips").innerHTML=(window.allDealersForManager||[]).map(d=>`<div class="chip ${selectedManagerDealers.has(d.id)?'selected':''}" onclick="toggleManagerDealer('${d.id}')">${escapeHtml(d.name)}</div>`).join("") }
 function toggleManagerDealer(id){selectedManagerDealers.has(id)?selectedManagerDealers.delete(id):selectedManagerDealers.add(id);renderManagerDealerChips()}
