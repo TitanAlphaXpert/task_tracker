@@ -122,6 +122,20 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
       <div class="report-note">Read-only reporting from existing Task Tracker data. Reports do not create, edit, delete, or change any tasks, employees, requests, or history.</div>
       <div class="report-toolbar"><select id="reportType" onchange="loadReport()"><option value="daily">Daily Report</option><option value="weekly">Weekly Report</option></select><input id="reportDate" type="date" onchange="loadReport()"></div>
       <div id="reportContent"><div class="empty">Select a report date.</div></div>
+      <div class="manager-card" style="margin-top:14px">
+        <div class="section-label">Automatic Email Recipients</div>
+        <div class="small" style="margin:5px 0 12px">
+          Add or remove recipients for this dealership. Daily and weekly sending can be controlled separately.
+        </div>
+        <div id="reportRecipients"></div>
+        <div class="field" style="margin-top:12px"><label>Recipient name</label><input id="reportRecipientName" maxlength="100" placeholder="e.g. Dealer Owner"></div>
+        <div class="field"><label>Email address</label><input id="reportRecipientEmail" type="email" maxlength="254" placeholder="name@example.com"></div>
+        <div class="two">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input id="reportDailyEnabled" type="checkbox" checked style="width:auto"> Daily</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px"><input id="reportWeeklyEnabled" type="checkbox" checked style="width:auto"> Weekly</label>
+        </div>
+        <button class="btn btn-accent btn-wide" style="margin-top:10px" onclick="addReportRecipient()">Add recipient</button>
+      </div>
     </div>
   </div>
 </div>
@@ -351,13 +365,79 @@ function switchTab(name){
   if(name==='requests')renderRequests();
   if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList();}
   if(name==='team')renderTeam();
-  if(name==='reports')loadReport();
+  if(name==='reports'){loadReport();loadReportRecipients();}
 }
 function reportEsc(v){return escapeHtml(v===null||v===undefined?'':String(v))}
 function renderReportTable(headers,rows){if(!rows||!rows.length)return '<div class="report-empty">No records for this period.</div>';return '<div style="overflow:auto"><table class="report-table"><thead><tr>'+headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>`<td>${reportEsc(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>'}
 async function loadReport(){if(!currentManagerDealerId||!managerUnlocked||!currentManager)return;const type=$('reportType').value,date=$('reportDate').value||today();$('reportDate').value=date;$('reportContent').innerHTML='<div class="empty">Loading report...</div>';try{const data=type==='daily'?await managerCall('report_dealership_daily',{p_dealer_id:currentManagerDealerId,p_report_date:date}):await managerCall('report_dealership_weekly',{p_dealer_id:currentManagerDealerId,p_week_start:date});if(type==='daily')renderDailyReport(data);else renderWeeklyReport(data)}catch(e){console.error(e);$('reportContent').innerHTML=`<div class="empty">Report backend is not installed or returned an error.<br><span class="small">${reportEsc(e.message||e)}</span></div>`}}
 function renderDailyReport(d){const assigned=Array.isArray(d.assigned)?d.assigned:[],completed=Array.isArray(d.completed)?d.completed:[],pending=Array.isArray(d.pending)?d.pending:[],helps=Array.isArray(d.help_requests)?d.help_requests:[],emps=Array.isArray(d.employee_summary)?d.employee_summary:[];$('reportContent').innerHTML=`<div class="manager-card"><b>${reportEsc(d.dealer_name)}</b><div class="small">Daily report • ${fmtDate(d.report_date)}</div></div><div class="report-kpis"><div class="report-kpi"><b>${assigned.length}</b><span>Assigned</span></div><div class="report-kpi"><b>${completed.length}</b><span>Completed</span></div><div class="report-kpi"><b>${pending.length}</b><span>Current Pending</span></div><div class="report-kpi"><b>${helps.length}</b><span>Help Requests</span></div></div><div class="report-section"><div class="subhead">Employee Summary</div>${renderReportTable(['Employee','Assigned','Completed','Late','Pending','Overdue'],emps.map(x=>[x.employee,x.assigned,x.completed,x.completed_late,x.current_pending,x.current_overdue]))}</div><div class="report-section"><div class="subhead">Pending / Attention Required</div>${renderReportTable(['Employee','Task','Due','Status','Days Open'],pending.map(x=>[x.employee,x.title,fmtDate(x.due_date),x.status,x.days_open]))}</div><div class="report-section"><div class="subhead">Completed</div>${renderReportTable(['Employee','Task','Completed','Days Taken','Status'],completed.map(x=>[x.employee,x.title,fmtTs(x.completed_at),x.days_taken,x.status==='late'?'COMPLETED LATE':'COMPLETED']))}</div><div class="report-section"><div class="subhead">Help Requests</div>${renderReportTable(['Employee','Subject','Category','Status','Raised'],helps.map(x=>[x.employee,x.subject,x.category,x.status,fmtTs(x.created_at)]))}</div>`}
 function renderWeeklyReport(d){$('reportContent').innerHTML=`<div class="manager-card"><b>${reportEsc(d.dealer_name)}</b><div class="small">Weekly report • ${fmtDate(d.week_start)} to ${fmtDate(d.week_end)}</div></div><div class="report-kpis"><div class="report-kpi"><b>${d.assigned||0}</b><span>Assigned</span></div><div class="report-kpi"><b>${d.completed||0}</b><span>Completed</span></div><div class="report-kpi"><b>${d.current_pending||0}</b><span>Current Pending</span></div><div class="report-kpi"><b>${d.current_overdue||0}</b><span>Current Overdue</span></div><div class="report-kpi"><b>${d.completed_late||0}</b><span>Completed Late</span></div><div class="report-kpi"><b>${d.help_requests||0}</b><span>Help Requests</span></div></div>`}
+
+async function loadReportRecipients(){
+  if(!currentManagerDealerId||!managerUnlocked)return;
+  const wrap=$('reportRecipients');
+  if(!wrap)return;
+  wrap.innerHTML='<div class="empty">Loading recipients...</div>';
+  try{
+    const rows=await managerCall('manager_get_report_recipients',{p_dealer_id:currentManagerDealerId});
+    wrap.innerHTML=rows.length?rows.map(r=>`
+      <div class="manager-card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+          <div>
+            <b>${escapeHtml(r.recipient_name||'Recipient')}</b>
+            <div class="small">${escapeHtml(r.email)}</div>
+            <div class="small">${r.daily_enabled?'Daily ✓':'Daily —'} • ${r.weekly_enabled?'Weekly ✓':'Weekly —'} • ${r.active?'ACTIVE':'PAUSED'}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="toggleReportRecipient('${r.id}',${!r.active})">${r.active?'Pause':'Resume'}</button>
+            <button class="btn btn-danger" onclick="deleteReportRecipient('${r.id}')">Remove</button>
+          </div>
+        </div>
+      </div>`).join(''):'<div class="empty">No automatic report recipients configured for this dealership.</div>';
+  }catch(e){
+    wrap.innerHTML=`<div class="empty">Recipient backend is not installed or returned an error.<br><span class="small">${reportEsc(e.message||e)}</span></div>`;
+  }
+}
+async function addReportRecipient(){
+  const name=$('reportRecipientName').value.trim();
+  const email=$('reportRecipientEmail').value.trim();
+  const daily=$('reportDailyEnabled').checked;
+  const weekly=$('reportWeeklyEnabled').checked;
+  if(!name||!email)return toast('Enter recipient name and email');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Enter a valid email address');
+  if(!daily&&!weekly)return toast('Select Daily or Weekly');
+  try{
+    await managerCall('manager_add_report_recipient',{
+      p_dealer_id:currentManagerDealerId,
+      p_recipient_name:name,
+      p_email:email,
+      p_daily_enabled:daily,
+      p_weekly_enabled:weekly
+    });
+    $('reportRecipientName').value='';
+    $('reportRecipientEmail').value='';
+    $('reportDailyEnabled').checked=true;
+    $('reportWeeklyEnabled').checked=true;
+    toast('Report recipient added');
+    await loadReportRecipients();
+  }catch(e){toast(e.message||'Could not add recipient')}
+}
+async function toggleReportRecipient(id,active){
+  try{
+    await managerCall('manager_set_report_recipient_active',{p_recipient_id:id,p_active:active});
+    toast(active?'Recipient activated':'Recipient paused');
+    await loadReportRecipients();
+  }catch(e){toast(e.message||'Could not update recipient')}
+}
+async function deleteReportRecipient(id){
+  if(!confirm('Remove this report recipient? They will no longer receive automatic reports.'))return;
+  try{
+    await managerCall('manager_delete_report_recipient',{p_recipient_id:id});
+    toast('Recipient removed');
+    await loadReportRecipients();
+  }catch(e){toast(e.message||'Could not remove recipient')}
+}
+
 
 function renderDashboard(){
   const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(t.status)).length, late=d.tasks.filter(t=>t.status==='late').length, done=d.tasks.filter(t=>t.status==='done').length, help=d.tasks.filter(t=>t.status==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
