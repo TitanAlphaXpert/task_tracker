@@ -10,6 +10,7 @@
 :root{--bg:#141A22;--surface:#1E2733;--surface2:#262F3D;--border:#37424F;--accent:#FF6B35;--caution:#FFC845;--success:#49B683;--danger:#E76161;--text:#EDEFF2;--muted:#8B97A8;--display:'Oswald',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:var(--body);background:radial-gradient(circle at 10% -10%,rgba(255,107,53,.1),transparent 40%),var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
 #app{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px 40px}.hidden{display:none!important}
+.manager-tab-panel[hidden]{display:none!important}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.brand{display:flex;align-items:center;gap:10px}.brand-mark{width:38px;height:38px;border-radius:8px;background:linear-gradient(155deg,var(--accent),#B84F27);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#161B22;font-size:13px}.brand-text h1{font-family:var(--display);font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.5px}.brand-text p{margin:0;font-size:11px;color:var(--muted)}.icon-btn,.back-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;cursor:pointer}.icon-btn{width:36px;height:36px}.back-btn{padding:8px 12px;font-weight:600}.back-row{margin-bottom:14px}.section-label,.field label{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase}.section-label{margin:4px 0 10px}
 select,input,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:11px;font:14px var(--body);outline:none}select{appearance:auto}.field{margin-bottom:14px}.field label{display:block;margin-bottom:6px}.hero-photo{width:100%;height:190px;object-fit:cover;border-radius:16px;border:1px solid var(--border);display:block;margin-bottom:18px;background:var(--surface)}.dealer-grid{display:grid;grid-template-columns:1fr;gap:10px}.dealer-option{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px;cursor:pointer}.dealer-option.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}.dealer-option .small{margin-top:3px}.person-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.person-tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}.person-avatar{width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:var(--surface2);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:20px;font-weight:600}.person-name{font-weight:600;font-size:14px}.empty{border:1px dashed var(--border);border-radius:14px;padding:28px 18px;text-align:center;color:var(--muted);font-size:13px}
 .manager-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}.manager-tile{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer}.manager-tile:active{transform:scale(.98)}.manager-role{font:10px var(--mono);color:var(--muted);margin-top:5px}.dealer-select-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:16px}.stamp-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}.stamp{font-size:10px;color:var(--muted);line-height:1.35}.stamp b{color:var(--text);font-weight:600}.pin-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:34px}.pin-input{width:180px;text-align:center;letter-spacing:8px;font:700 22px var(--mono)}.btn{border:0;border-radius:9px;padding:10px 12px;font:600 13px var(--body);cursor:pointer}.btn-accent{background:linear-gradient(155deg,var(--accent),#B84F27);color:#161B22}.btn-done{background:var(--success);color:#0E1F17}.btn-help{background:transparent;color:var(--caution);border:1px solid var(--caution)}.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}.btn-wide{width:100%}.btn-row{display:flex;gap:8px;margin-top:10px}.btn-row>*{flex:1}
@@ -95,29 +96,29 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="back-row"><button class="back-btn" onclick="selectManagerDealershipScreen()">← Change dealership</button><button class="back-btn" style="float:right" onclick="goHome()">Exit</button></div>
     <div class="session" id="managerSession"></div>
     <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="requests" onclick="switchTab('requests')">Requests</div><div class="tab" data-tab="recurring" onclick="switchTab('recurring')">Recurring Tasks</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div><div class="tab" data-tab="reports" onclick="switchTab('reports')">Reports</div></div>
-    <div id="tab-dashboard"></div>
-    <div id="tab-assign" class="hidden">
+    <div id="tab-dashboard" class="manager-tab-panel"></div>
+    <div id="tab-assign" class="manager-tab-panel hidden" hidden>
       <div class="field"><label>Task title</label><textarea id="taskTitle" rows="2" placeholder="e.g. Follow up on Pro X customer complaint"></textarea></div>
       <div class="field"><label>Due date</label><input id="taskDue" type="date"></div>
       <div class="field"><label>Assign to</label><div class="chips" id="assignChips"></div></div>
       <button class="btn btn-accent btn-wide" onclick="assignTask()">Assign task</button>
     </div>
-    <div id="tab-board" class="hidden"></div>
-    <div id="tab-requests" class="hidden"></div>
-    <div id="tab-recurring" class="hidden">
+    <div id="tab-board" class="manager-tab-panel hidden" hidden></div>
+    <div id="tab-requests" class="manager-tab-panel hidden" hidden></div>
+    <div id="tab-recurring" class="manager-tab-panel hidden" hidden>
       <div class="manager-card"><div class="section-label">Create Recurring Task</div><div class="small" style="margin:5px 0 12px">Configure a task once. The system creates normal task occurrences automatically.</div>
       <div class="field"><label>Task title</label><textarea id="recTitle" rows="2" placeholder="e.g. Submit weekly service report"></textarea></div>
       <div class="field"><label>Recurrence type</label><select id="recType" onchange="renderRecurrenceSchedule()"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly_fixed">Monthly — Fixed Date</option><option value="monthly_due_by">Monthly — Due By</option><option value="monthly_weekday">Monthly — Week & Day</option></select></div></div>
       <div id="recSchedule" class="recurrence-box"></div><div class="field"><label>Assign to</label><div class="chips" id="recAssignChips"></div></div>
       <div class="two"><div class="field"><label>Start date</label><input id="recStart" type="date"></div><div class="field"><label>End date (optional)</label><input id="recEnd" type="date"></div></div>
-      <button class="btn btn-accent btn-wide" onclick="createRecurringTask()">Create Recurring Task</button></div>
+      <button class="btn btn-accent btn-wide" onclick="createRecurringTask()">Create Recurring Task</button>
       <div id="recurringList"></div>
     </div>
-    <div id="tab-team" class="hidden">
+    <div id="tab-team" class="manager-tab-panel hidden" hidden>
       <div class="manager-card"><div class="small" style="margin-bottom:12px">Add manpower to the selected dealership.</div><div class="field"><label>Employee name</label><input id="newPersonName" placeholder="Name"></div><div class="field"><label>Employee PIN</label><input id="newPersonPin" inputmode="numeric" maxlength="6" placeholder="4–6 digits"></div><button class="btn btn-accent btn-wide" onclick="addPerson()">Add employee</button></div>
       <div id="peopleList"></div>
     </div>
-    <div id="tab-reports" class="hidden">
+    <div id="tab-reports" class="manager-tab-panel hidden" hidden>
       <div class="report-note">Read-only reporting from existing Task Tracker data. Reports do not create, edit, delete, or change any tasks, employees, requests, or history.</div>
       <div class="report-toolbar"><select id="reportType" onchange="loadReport()"><option value="daily">Daily Report</option><option value="weekly">Weekly Report</option></select><input id="reportDate" type="date" onchange="loadReport()"></div>
       <div id="reportContent"><div class="empty">Select a report date.</div></div>
@@ -272,14 +273,22 @@ async function loadAllDealersForManager(){
 }
 async function managerLogin(){
   if(!currentManager)return toast("Select a manager first");
+  const pin=$('managerPin').value.trim();
+  if(!/^[0-9]{4,8}$/.test(pin))return toast("Enter a valid 4–8 digit manager PIN");
   try{
-    await rpc("manager_verify",{p_manager_id:currentManager.id,p_pin:$('managerPin').value});
+    const verified=await rpc("manager_verify",{p_manager_id:currentManager.id,p_pin:pin});
+    if(!verified){managerUnlocked=false;return toast("Incorrect manager PIN");}
+    const profile=await rpc("manager_get_profile",{p_manager_id:currentManager.id,p_pin:pin});
+    if(!profile?.manager){managerUnlocked=false;return toast("Manager profile could not be loaded");}
     managerUnlocked=true;
-    const profile=await rpc("manager_get_profile",{p_manager_id:currentManager.id,p_pin:$('managerPin').value});
     currentManager=profile.manager; dealers=profile.dealers||[];
     await loadAllDealersForManager();
     await selectManagerDealershipScreen();
-  }catch(e){toast("Incorrect manager PIN")}
+  }catch(e){
+    managerUnlocked=false;
+    console.error('Manager login error:',e);
+    toast(e?.message||"Manager login failed");
+  }
 }
 async function managerCall(name,args={}){if(!managerUnlocked||!currentManager)throw new Error("Manager session expired");return rpc(name,{p_manager_id:currentManager.id,p_pin:$('managerPin').value,...args})}
 async function selectManagerDealershipScreen(){
@@ -312,14 +321,38 @@ async function loadManagerData(){
   const d=await managerCall('manager_get_data');
   dealers=d.dealers||[]; people=d.people||[]; tasks=d.tasks||[]; requests=d.requests||[];
   recurringTasks=await managerCall('manager_get_recurring_tasks');
-  populateDealerContext(); renderDashboard(); renderRecurringList();
+  populateDealerContext();
+  renderDashboard();
+  const activeTab=document.querySelector('.tab.active')?.dataset.tab;
+  if(activeTab==='recurring') renderRecurringList();
 }
 function populateDealerContext(){
   const dealer=dealers.find(d=>d.id===currentManagerDealerId);
   renderAssignPeople();renderRecurringPeople();
 }
 function currentDealerData(){return {dealer:dealers.find(d=>d.id===currentManagerDealerId),people:people.filter(p=>p.dealer_id===currentManagerDealerId),tasks:tasks.filter(t=>t.dealer_id===currentManagerDealerId),requests:requests.filter(r=>r.dealer_id===currentManagerDealerId)}}
-function switchTab(name){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));['dashboard','assign','board','requests','recurring','team','reports'].forEach(x=>$('tab-'+x).classList.toggle('hidden',x!==name));if(name==='dashboard')renderDashboard();if(name==='assign')renderAssignPeople();if(name==='board')renderBoard();if(name==='requests')renderRequests();if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList()}if(name==='team')renderTeam();if(name==='reports')loadReport();}
+function switchTab(name){
+  const tabs=['dashboard','assign','board','requests','recurring','team','reports'];
+  if(!tabs.includes(name)) name='dashboard';
+  document.querySelectorAll('#screen-manager .tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  // Hard-enforce one visible manager panel at a time. This prevents recurring-task
+  // content from remaining visible after repeated tab switches or re-renders.
+  tabs.forEach(x=>{
+    const el=$('tab-'+x);
+    if(!el)return;
+    const visible=x===name;
+    el.hidden=!visible;
+    el.classList.toggle('hidden',!visible);
+    el.style.display=visible?'':'none';
+  });
+  if(name==='dashboard')renderDashboard();
+  if(name==='assign')renderAssignPeople();
+  if(name==='board')renderBoard();
+  if(name==='requests')renderRequests();
+  if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList();}
+  if(name==='team')renderTeam();
+  if(name==='reports')loadReport();
+}
 function reportEsc(v){return escapeHtml(v===null||v===undefined?'':String(v))}
 function renderReportTable(headers,rows){if(!rows||!rows.length)return '<div class="report-empty">No records for this period.</div>';return '<div style="overflow:auto"><table class="report-table"><thead><tr>'+headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>`<td>${reportEsc(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>'}
 async function loadReport(){if(!currentManagerDealerId||!managerUnlocked||!currentManager)return;const type=$('reportType').value,date=$('reportDate').value||today();$('reportDate').value=date;$('reportContent').innerHTML='<div class="empty">Loading report...</div>';try{const data=type==='daily'?await managerCall('report_dealership_daily',{p_dealer_id:currentManagerDealerId,p_report_date:date}):await managerCall('report_dealership_weekly',{p_dealer_id:currentManagerDealerId,p_week_start:date});if(type==='daily')renderDailyReport(data);else renderWeeklyReport(data)}catch(e){console.error(e);$('reportContent').innerHTML=`<div class="empty">Report backend is not installed or returned an error.<br><span class="small">${reportEsc(e.message||e)}</span></div>`}}
@@ -340,9 +373,7 @@ function renderManagerTask(t){
   const overdue=!['done','late'].includes(t.status)&&t.due_date<today(); const completed=['done','late'].includes(t.status); const elapsed=completed&&t.days_taken!==null&&t.days_taken!==undefined?Number(t.days_taken):elapsedDays(t);
   return `<div class="board-card"><div class="board-top"><div><div class="jc-id">TASK-${t.id.slice(-6).toUpperCase()} • Due ${fmtDate(t.due_date)}</div><div style="font-weight:600;font-size:13px;margin-top:3px">${escapeHtml(t.title)}</div></div><span class="mini ${t.status}">${t.status==='late'?'COMPLETED LATE':t.status.toUpperCase()}</span></div><div class="stamp-grid"><div class="stamp">Assigned<br><b>${fmtTs(t.assigned_at||t.created_at)}</b></div><div class="stamp">${completed?'Completed':'Elapsed'}<br><b>${completed?fmtTs(t.completed_at):`${elapsed} day${elapsed===1?'':'s'}`}</b></div></div>${completed?`<div class="small">Days taken to complete: <b>${elapsed} day${elapsed===1?'':'s'}</b></div>`:''}${t.help_note?`<div class="help-note"><b>Help requested:</b> ${escapeHtml(t.help_note)}</div>`:''}${t.help_response?`<div class="help-note" style="color:var(--success);border-color:rgba(73,182,131,.3);background:rgba(73,182,131,.08)"><b>Manager response:</b> ${escapeHtml(t.help_response)}${t.help_responded_at?`<div class="small">Replied: ${fmtTs(t.help_responded_at)}</div>`:''}</div>`:''}${overdue?'<div class="small danger-text">OVERDUE</div>':''}${t.status==='help'?`<div class="reply-box"><textarea id="reply-${t.id}" placeholder="Type your answer to the employee..."></textarea><button class="btn btn-accent btn-wide" onclick="replyAndResolve('${t.id}')">Reply & Resolve</button></div>`:''}<div class="actions"><button class="btn btn-secondary" onclick="editTask('${t.id}')">Edit</button>${completed?`<button class="btn btn-secondary" onclick="reopenTask('${t.id}')">Reopen</button>`:''}<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></div></div>`;
 }
-async function editTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;const title=prompt('Task title:',t.title);if(title===null)return;const due=prompt('Due date (YYYY-MM-DD):',t.due_date);if(due===null)return;const sameDealerPeople=people.filter(p=>p.dealer_id===t.dealer_id);const menu=sameDealerPeople.map((p,i)=>`${i+1}. ${p.name}`).join('\
-');const current=Math.max(0,sameDealerPeople.findIndex(p=>p.id===t.assigned_to))+1;const choice=prompt(`Assign to (enter number):\
-${menu}`,String(current));if(choice===null)return;const idx=Number(choice)-1;const assignee=sameDealerPeople[idx];if(!assignee)return toast('Invalid employee selection');try{await managerCall('manager_update_task',{p_task_id:id,p_title:title.trim(),p_due_date:due,p_assigned_to:assignee.id});toast('Task updated');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not update')}}
+async function editTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;const title=prompt('Task title:',t.title);if(title===null)return;const due=prompt('Due date (YYYY-MM-DD):',t.due_date);if(due===null)return;const sameDealerPeople=people.filter(p=>p.dealer_id===t.dealer_id);const menu=sameDealerPeople.map((p,i)=>`${i+1}. ${p.name}`).join('\\n');const current=Math.max(0,sameDealerPeople.findIndex(p=>p.id===t.assigned_to))+1;const choice=prompt(`Assign to (enter number):\\n${menu}`,String(current));if(choice===null)return;const idx=Number(choice)-1;const assignee=sameDealerPeople[idx];if(!assignee)return toast('Invalid employee selection');try{await managerCall('manager_update_task',{p_task_id:id,p_title:title.trim(),p_due_date:due,p_assigned_to:assignee.id});toast('Task updated');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not update')}}
 async function deleteTask(id){if(!confirm('Delete this task?'))return;try{await managerCall('manager_delete_task',{p_task_id:id});toast('Task deleted');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not delete')}}
 async function replyAndResolve(id){const response=$('reply-'+id)?.value.trim();if(!response)return toast('Enter a response first');try{await managerCall('manager_reply_help',{p_task_id:id,p_response:response});toast('Response sent and help resolved');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not send response')}}
 async function reopenTask(id){if(!confirm('Reopen this completed task?'))return;try{await managerCall('manager_set_task_status',{p_task_id:id,p_status:'pending'});toast('Task reopened');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not reopen task')}}
@@ -357,7 +388,11 @@ function getRecurringSchedule(){const type=$('recType').value;if(type==='daily')
 function recurrenceLabel(r){const s=r.schedule||{};if(r.recurrence_type==='daily')return 'Daily';if(r.recurrence_type==='weekly')return `Weekly • ${(s.weekdays||[]).map(n=>['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][n]).join(', ')}`;if(r.recurrence_type==='monthly_fixed')return `Monthly • Day ${s.day_of_month}`;if(r.recurrence_type==='monthly_due_by')return `Monthly • Due by ${s.due_by_day}`;return `Monthly • ${['','1st','2nd','3rd','4th','5th'][s.week_no]} ${['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][s.weekday]}`}
 async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'&&!schedule.weekdays.length)return toast('Select at least one weekday');if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();await loadManagerData();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
 function renderRecurringList(){
-  if(!$('recurringList'))return;
+  const panel=$('tab-recurring');
+  const target=$('recurringList');
+  if(!panel||!target)return;
+  if(document.querySelector('#screen-manager .tab.active')?.dataset.tab!=='recurring')return;
+  if(panel.hidden || panel.style.display==='none')return;
   const list=[...recurringTasks].filter(r=>!currentManagerDealerId||r.dealer_id===currentManagerDealerId).sort((a,b)=>Number(b.active)-Number(a.active)||new Date(b.created_at)-new Date(a.created_at));
   const cards=list.length?list.map(r=>`<div class="recurring-card ${r.active?'':'paused'}"><div class="recurring-top"><div><div class="recurring-title">${escapeHtml(r.title)}</div><div class="recurring-meta">${escapeHtml(personName(r.assigned_to))}<br>${recurrenceLabel(r)} • Start ${fmtDate(r.start_date)}${r.end_date?' • End '+fmtDate(r.end_date):''}</div></div><span class="mini ${r.active?'done':''}">${r.active?'ACTIVE':'PAUSED'}</span></div><div class="recurring-actions"><button class="btn btn-secondary" onclick="toggleRecurring('${r.id}',${!r.active})">${r.active?'Pause':'Resume'}</button><button class="btn btn-secondary" onclick="editRecurring('${r.id}')">Edit</button><button class="btn btn-danger" onclick="deleteRecurring('${r.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring tasks configured for this dealership.</div>';
   $('recurringList').innerHTML='<div class="subhead">Active / Paused Recurring Tasks</div>'+cards;
