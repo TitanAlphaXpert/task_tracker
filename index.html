@@ -67,7 +67,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     </div>
     <div class="subhead">Open Tasks</div><div id="todayTasks"></div>
     <div class="subhead">My Requests</div><div id="myRequests"></div>
-    <div id="completedWrap"><div class="subhead">Completed</div><div id="completedTasks"></div></div>
+    
   </div>
 
   <div id="screen-manager-list" class="hidden">
@@ -121,6 +121,12 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div id="tab-reports" class="manager-tab-panel hidden" hidden>
       <div class="report-note">Read-only reporting from existing Task Tracker data. Reports do not create, edit, delete, or change any tasks, employees, requests, or history.</div>
       <div class="report-toolbar"><select id="reportType" onchange="loadReport()"><option value="daily">Daily Report</option><option value="weekly">Weekly Report</option></select><input id="reportDate" type="date" onchange="loadReport()"></div>
+      <div class="manager-card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <div><b>Manual Report Send</b><div id="manualSendInfo" class="small">Send the currently selected report to active recipients.</div></div>
+          <button id="manualSendBtn" class="btn btn-accent" onclick="sendCurrentReportNow()">Send This Report Now</button>
+        </div>
+      </div>
       <div id="reportContent"><div class="empty">Select a report date.</div></div>
       <div class="manager-card" style="margin-top:14px">
         <div class="section-label">Automatic Email Recipients</div>
@@ -208,21 +214,44 @@ function elapsedDays(t){
 }
 function renderPerson(){
   const my=tasks.filter(x=>x.assigned_to===currentPerson.id);
-  const open=my.filter(x=>!["done","late"].includes(x.status)).sort((a,b)=>{
+  const open=my.filter(x=>!["done","late"].includes(x.status)&&!x.completed_at).sort((a,b)=>{
     const ad=a.due_date,bd=b.due_date;
     return ad.localeCompare(bd)||new Date(a.created_at)-new Date(b.created_at);
   });
-  const completed=my.filter(x=>["done","late"].includes(x.status)).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at));
+  const completed=my.filter(x=>["done","late"].includes(x.status)||!!x.completed_at).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at));
   $("todayTasks").innerHTML=open.length?open.map(renderEmployeeCard).join(""):'<div class="empty">No open tasks. 🎉</div>';
-  $("completedWrap").classList.toggle("hidden",!completed.length);
-  $("completedTasks").innerHTML=completed.slice(0,12).map(renderEmployeeCard).join("");
   renderStreak(my);
   renderMyRequests();
 }
 function renderStreak(my){
   const doneDates=new Set(my.filter(x=>["done","late"].includes(x.status)).map(x=>x.completed_at?.slice(0,10)).filter(Boolean));
-  let n=0,d=istNow();let ds=today();if(doneDates.has(ds))n++;
-  for(let i=1;i<120;i++){d.setDate(d.getDate()-1);ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;if(doneDates.has(ds))n++;else break}
+  let n=0,d=istNow();
+
+  // Streak follows working days only. Sunday is a weekly holiday and is skipped.
+  // On Monday, if today's task is not completed yet, preserve the streak from Saturday
+  // until Monday's working-day activity is completed.
+  for(let i=0;i<120;i++){
+    const iso=d.getDay(); // 0 = Sunday
+    if(iso===0){
+      d.setDate(d.getDate()-1);
+      continue;
+    }
+
+    const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    if(doneDates.has(ds)){
+      n++;
+      d.setDate(d.getDate()-1);
+      continue;
+    }
+
+    // If today has not been completed yet, do not break yesterday's streak.
+    if(i===0){
+      d.setDate(d.getDate()-1);
+      continue;
+    }
+    break;
+  }
+
   $("odoDigits").innerHTML=String(n).padStart(3,"0").split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
 }
 function renderEmployeeCard(t,overdue=false){
@@ -261,7 +290,7 @@ async function submitRequest(){
   }catch(e){toast(e.message||"Could not send request")}
 }
 function renderMyRequests(){
-  const list=[...requests].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const cutoff=Date.now()-7*24*60*60*1000; const list=[...requests].filter(r=>r.status!=='resolved'||!r.resolved_at||new Date(r.resolved_at).getTime()>=cutoff).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   $("myRequests").innerHTML=list.length?list.map(r=>{
     const statusLabel=r.status==="in_progress"?"IN PROGRESS":r.status.toUpperCase();
     return `<div class="request-card ${r.status}"><div class="request-top"><div><div class="request-title">${escapeHtml(r.subject)}</div><div class="request-meta">${escapeHtml(r.category)} • ${fmtTs(r.created_at)}</div></div><span class="status ${r.status}">${statusLabel}</span></div><div class="request-details">${escapeHtml(r.details)}</div>${r.manager_response?`<div class="request-response"><b>CSM / Manager Response:</b> ${escapeHtml(r.manager_response)}${r.responded_at?`<div class="small">Replied: ${fmtTs(r.responded_at)}</div>`:""}</div>`:""}${r.status!=="resolved"&&!r.manager_response?'<div class="small" style="margin-top:8px;color:var(--caution)">Awaiting CSM / manager response</div>':""}</div>`;
@@ -369,9 +398,38 @@ function switchTab(name){
 }
 function reportEsc(v){return escapeHtml(v===null||v===undefined?'':String(v))}
 function renderReportTable(headers,rows){if(!rows||!rows.length)return '<div class="report-empty">No records for this period.</div>';return '<div style="overflow:auto"><table class="report-table"><thead><tr>'+headers.map(h=>`<th>${escapeHtml(h)}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>`<td>${reportEsc(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table></div>'}
-async function loadReport(){if(!currentManagerDealerId||!managerUnlocked||!currentManager)return;const type=$('reportType').value,date=$('reportDate').value||today();$('reportDate').value=date;$('reportContent').innerHTML='<div class="empty">Loading report...</div>';try{const data=type==='daily'?await managerCall('manager_report_dealership_daily',{p_dealer_id:currentManagerDealerId,p_report_date:date}):await managerCall('manager_report_dealership_weekly',{p_dealer_id:currentManagerDealerId,p_week_start:date});if(type==='daily')renderDailyReport(data);else renderWeeklyReport(data)}catch(e){console.error(e);$('reportContent').innerHTML=`<div class="empty">Report backend is not installed or returned an error.<br><span class="small">${reportEsc(e.message||e)}</span></div>`}}
-function renderDailyReport(d){const assigned=Array.isArray(d.assigned)?d.assigned:[],completed=Array.isArray(d.completed)?d.completed:[],pending=Array.isArray(d.pending)?d.pending:[],helps=Array.isArray(d.help_requests)?d.help_requests:[],emps=Array.isArray(d.employee_summary)?d.employee_summary:[];$('reportContent').innerHTML=`<div class="manager-card"><b>${reportEsc(d.dealer_name)}</b><div class="small">Daily report • ${fmtDate(d.report_date)}</div></div><div class="report-kpis"><div class="report-kpi"><b>${assigned.length}</b><span>Assigned</span></div><div class="report-kpi"><b>${completed.length}</b><span>Completed</span></div><div class="report-kpi"><b>${pending.length}</b><span>Current Pending</span></div><div class="report-kpi"><b>${helps.length}</b><span>Help Requests</span></div></div><div class="report-section"><div class="subhead">Employee Summary</div>${renderReportTable(['Employee','Assigned','Completed','Late','Pending','Overdue'],emps.map(x=>[x.employee,x.assigned,x.completed,x.completed_late,x.current_pending,x.current_overdue]))}</div><div class="report-section"><div class="subhead">Pending / Attention Required</div>${renderReportTable(['Employee','Task','Due','Status','Days Open'],pending.map(x=>[x.employee,x.title,fmtDate(x.due_date),x.status,x.days_open]))}</div><div class="report-section"><div class="subhead">Completed</div>${renderReportTable(['Employee','Task','Completed','Days Taken','Status'],completed.map(x=>[x.employee,x.title,fmtTs(x.completed_at),x.days_taken,x.status==='late'?'COMPLETED LATE':'COMPLETED']))}</div><div class="report-section"><div class="subhead">Help Requests</div>${renderReportTable(['Employee','Subject','Category','Status','Raised'],helps.map(x=>[x.employee,x.subject,x.category,x.status,fmtTs(x.created_at)]))}</div>`}
+async function loadReport(){if(!currentManagerDealerId||!managerUnlocked||!currentManager)return;const type=$('reportType').value,date=$('reportDate').value||today();$('reportDate').value=date;if($('manualSendInfo'))$('manualSendInfo').textContent=`Send the selected ${type==='weekly'?'weekly':'daily'} report to active recipients.`;$('reportContent').innerHTML='<div class="empty">Loading report...</div>';try{const data=type==='daily'?await managerCall('manager_report_dealership_daily',{p_dealer_id:currentManagerDealerId,p_report_date:date}):await managerCall('manager_report_dealership_weekly',{p_dealer_id:currentManagerDealerId,p_week_start:date});if(type==='daily')renderDailyReport(data);else renderWeeklyReport(data)}catch(e){console.error(e);$('reportContent').innerHTML=`<div class="empty">Report backend is not installed or returned an error.<br><span class="small">${reportEsc(e.message||e)}</span></div>`}}
+function renderDailyReport(d){const assigned=Array.isArray(d.assigned)?d.assigned:[],completed=Array.isArray(d.completed)?d.completed:[],rawPending=Array.isArray(d.pending)?d.pending:[],pending=rawPending.filter(x=>!['done','late'].includes(String(x.status||'').toLowerCase())&&!x.completed_at),helps=Array.isArray(d.help_requests)?d.help_requests:[],emps=Array.isArray(d.employee_summary)?d.employee_summary:[];$('reportContent').innerHTML=`<div class="manager-card"><b>${reportEsc(d.dealer_name)}</b><div class="small">Daily report • ${fmtDate(d.report_date)}</div></div><div class="report-kpis"><div class="report-kpi"><b>${assigned.length}</b><span>Assigned</span></div><div class="report-kpi"><b>${completed.length}</b><span>Completed</span></div><div class="report-kpi"><b>${pending.length}</b><span>Current Pending</span></div><div class="report-kpi"><b>${helps.length}</b><span>Help Requests</span></div></div><div class="report-section"><div class="subhead">Employee Summary</div>${renderReportTable(['Employee','Assigned','Completed','Late','Pending','Overdue'],emps.map(x=>[x.employee,x.assigned,x.completed,x.completed_late,x.current_pending,x.current_overdue]))}</div><div class="report-section"><div class="subhead">Pending / Attention Required</div>${renderReportTable(['Employee','Task','Due','Status','Days Open'],pending.map(x=>[x.employee,x.title,fmtDate(x.due_date),x.status,x.days_open]))}</div><div class="report-section"><div class="subhead">Help Requests</div>${renderReportTable(['Employee','Subject','Category','Status','Raised'],helps.map(x=>[x.employee,x.subject,x.category,x.status,fmtTs(x.created_at)]))}</div>`}
 function renderWeeklyReport(d){$('reportContent').innerHTML=`<div class="manager-card"><b>${reportEsc(d.dealer_name)}</b><div class="small">Weekly report • ${fmtDate(d.week_start)} to ${fmtDate(d.week_end)}</div></div><div class="report-kpis"><div class="report-kpi"><b>${d.assigned||0}</b><span>Assigned</span></div><div class="report-kpi"><b>${d.completed||0}</b><span>Completed</span></div><div class="report-kpi"><b>${d.current_pending||0}</b><span>Current Pending</span></div><div class="report-kpi"><b>${d.current_overdue||0}</b><span>Current Overdue</span></div><div class="report-kpi"><b>${d.completed_late||0}</b><span>Completed Late</span></div><div class="report-kpi"><b>${d.help_requests||0}</b><span>Help Requests</span></div></div>`}
+
+async function sendCurrentReportNow(){
+  if(!currentManagerDealerId||!managerUnlocked||!currentManager)return toast('Manager session expired');
+  const btn=$('manualSendBtn'), info=$('manualSendInfo');
+  const type=$('reportType').value==='weekly'?'weekly':'daily';
+  const date=$('reportDate').value||today();
+  if(!date)return toast('Select a report date first');
+  const typeLabel=type==='weekly'?'weekly':'daily';
+  if(!confirm(`Send this ${typeLabel} report now to active ${typeLabel} recipients for ${dealerName(currentManagerDealerId)}?`))return;
+  btn.disabled=true; btn.textContent='Sending...';
+  info.textContent='Authorizing and sending the selected report...';
+  try{
+    if(!sb)throw new Error('Supabase is not configured');
+    const {data,error}=await sb.functions.invoke('task-report-email',{
+      body:{type:'manual',reportType:type,dealer_id:currentManagerDealerId,report_date:date,manager_id:currentManager.id,pin:$('managerPin').value}
+    });
+    if(error)throw error;
+    if(!data||!data.ok)throw new Error(data?.error||'Report could not be sent');
+    const count=Number(data.recipient_count||0);
+    if(!count){info.textContent='No active recipients are configured for this report type.';toast('No active recipients configured');return;}
+    info.textContent=`Report sent successfully to ${count} active recipient${count===1?'':'s'}.`;
+    toast(`Report sent to ${count} recipient${count===1?'':'s'}`);
+  }catch(e){
+    console.error('Manual report send error:',e);
+    const msg=e?.context?.body?.error||e?.message||String(e);
+    info.textContent='Report was not sent. Check the reporting email service configuration.';
+    toast(msg);
+  }finally{btn.disabled=false;btn.textContent='Send This Report Now';}
+}
 
 async function loadReportRecipients(){
   if(!currentManagerDealerId||!managerUnlocked)return;
@@ -440,33 +498,33 @@ async function deleteReportRecipient(id){
 
 
 function renderDashboard(){
-  const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(t.status)).length, late=d.tasks.filter(t=>t.status==='late').length, done=d.tasks.filter(t=>t.status==='done').length, help=d.tasks.filter(t=>t.status==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
-  $('tab-dashboard').innerHTML=`<div class="manager-card"><b>${escapeHtml(d.dealer?.name||'Dealership')}</b><div class="small">Manager view is restricted to this dealership.</div></div><div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open Tasks</div></div><div class="manager-card"><b>${done}</b><div class="small">Completed</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed Late</div></div><div class="manager-card"><b>${help}</b><div class="small">Task Help Requests</div></div><div class="manager-card"><b>${openRequests}</b><div class="small">Open Requests</div></div><div class="manager-card"><b>${d.people.length}</b><div class="small">Active Employees</div></div></div>`;
+  const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at).length, late=d.tasks.filter(t=>t.status==='late').length, done=d.tasks.filter(t=>t.status==='done').length, help=d.tasks.filter(t=>t.status==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
+  $('tab-dashboard').innerHTML=`<div class="manager-card"><b>${escapeHtml(d.dealer?.name||'Dealership')}</b><div class="small">Manager view is restricted to this dealership.</div></div><div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open Tasks</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed Late</div></div><div class="manager-card"><b>${help}</b><div class="small">Task Help Requests</div></div><div class="manager-card"><b>${openRequests}</b><div class="small">Open Requests</div></div><div class="manager-card"><b>${d.people.length}</b><div class="small">Active Employees</div></div></div>`;
 }
 function renderAssignPeople(){const did=currentManagerDealerId;const pp=people.filter(p=>p.dealer_id===did);$('assignChips').innerHTML=pp.length?pp.map(p=>`<div class="chip ${selectedAssignees.has(p.id)?'selected':''}" onclick="toggleAssignee('${p.id}')">${escapeHtml(p.name)}</div>`).join(''):'<div class="small">No employees in this dealership.</div>'}
 function toggleAssignee(id){selectedAssignees.has(id)?selectedAssignees.delete(id):selectedAssignees.add(id);renderAssignPeople()}
 async function assignTask(){const title=$('taskTitle').value.trim(),due=$('taskDue').value,did=currentManagerDealerId;if(!title||!due||!selectedAssignees.size)return toast('Enter title, due date and at least one employee');try{for(const pid of selectedAssignees)await managerCall('manager_create_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_due_date:due});toast('Task assigned');$('taskTitle').value='';selectedAssignees.clear();await loadManagerData();switchTab('assign')}catch(e){toast(e.message||'Could not assign task')}}
 function personName(id){return people.find(p=>p.id===id)?.name||'Unknown'}
 function dealerName(id){return dealers.find(d=>d.id===id)?.name||'Unknown'}
-function renderBoard(){const d=currentDealerData();const pp=d.people;const groups=pp.map(p=>{const ts=d.tasks.filter(t=>t.assigned_to===p.id).sort((a,b)=>a.due_date.localeCompare(b.due_date));return `<div style="margin-bottom:14px"><div class="small" style="margin-bottom:6px;color:var(--text)">${escapeHtml(p.name)}</div>`+(ts.length?ts.map(renderManagerTask).join(''):'<div class="small">No tasks</div>')+'</div>'}).join('');$('tab-board').innerHTML=groups||'<div class="empty">No employees in this dealership.</div>'}
+function renderBoard(){const d=currentDealerData();const pp=d.people;const groups=pp.map(p=>{const ts=d.tasks.filter(t=>t.assigned_to===p.id&&!['done','late'].includes(t.status)&&!t.completed_at).sort((a,b)=>a.due_date.localeCompare(b.due_date));return `<div style="margin-bottom:14px"><div class="small" style="margin-bottom:6px;color:var(--text)">${escapeHtml(p.name)}</div>`+(ts.length?ts.map(renderManagerTask).join(''):'<div class="small">No open tasks</div>')+'</div>'}).join('');$('tab-board').innerHTML=groups||'<div class="empty">No employees in this dealership.</div>'}
 function renderManagerTask(t){
-  const overdue=!['done','late'].includes(t.status)&&t.due_date<today(); const completed=['done','late'].includes(t.status); const elapsed=completed&&t.days_taken!==null&&t.days_taken!==undefined?Number(t.days_taken):elapsedDays(t);
+  const overdue=!['done','late'].includes(t.status)&&!t.completed_at&&t.due_date<today(); const completed=['done','late'].includes(t.status)||!!t.completed_at; const elapsed=completed&&t.days_taken!==null&&t.days_taken!==undefined?Number(t.days_taken):elapsedDays(t);
   return `<div class="board-card"><div class="board-top"><div><div class="jc-id">TASK-${t.id.slice(-6).toUpperCase()} • Due ${fmtDate(t.due_date)}</div><div style="font-weight:600;font-size:13px;margin-top:3px">${escapeHtml(t.title)}</div></div><span class="mini ${t.status}">${t.status==='late'?'COMPLETED LATE':t.status.toUpperCase()}</span></div><div class="stamp-grid"><div class="stamp">Assigned<br><b>${fmtTs(t.assigned_at||t.created_at)}</b></div><div class="stamp">${completed?'Completed':'Elapsed'}<br><b>${completed?fmtTs(t.completed_at):`${elapsed} day${elapsed===1?'':'s'}`}</b></div></div>${completed?`<div class="small">Days taken to complete: <b>${elapsed} day${elapsed===1?'':'s'}</b></div>`:''}${t.help_note?`<div class="help-note"><b>Help requested:</b> ${escapeHtml(t.help_note)}</div>`:''}${t.help_response?`<div class="help-note" style="color:var(--success);border-color:rgba(73,182,131,.3);background:rgba(73,182,131,.08)"><b>Manager response:</b> ${escapeHtml(t.help_response)}${t.help_responded_at?`<div class="small">Replied: ${fmtTs(t.help_responded_at)}</div>`:''}</div>`:''}${overdue?'<div class="small danger-text">OVERDUE</div>':''}${t.status==='help'?`<div class="reply-box"><textarea id="reply-${t.id}" placeholder="Type your answer to the employee..."></textarea><button class="btn btn-accent btn-wide" onclick="replyAndResolve('${t.id}')">Reply & Resolve</button></div>`:''}<div class="actions"><button class="btn btn-secondary" onclick="editTask('${t.id}')">Edit</button>${completed?`<button class="btn btn-secondary" onclick="reopenTask('${t.id}')">Reopen</button>`:''}<button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></div></div>`;
 }
 async function editTask(id){const t=tasks.find(x=>x.id===id);if(!t)return;const title=prompt('Task title:',t.title);if(title===null)return;const due=prompt('Due date (YYYY-MM-DD):',t.due_date);if(due===null)return;const sameDealerPeople=people.filter(p=>p.dealer_id===t.dealer_id);const menu=sameDealerPeople.map((p,i)=>`${i+1}. ${p.name}`).join('\\n');const current=Math.max(0,sameDealerPeople.findIndex(p=>p.id===t.assigned_to))+1;const choice=prompt(`Assign to (enter number):\\n${menu}`,String(current));if(choice===null)return;const idx=Number(choice)-1;const assignee=sameDealerPeople[idx];if(!assignee)return toast('Invalid employee selection');try{await managerCall('manager_update_task',{p_task_id:id,p_title:title.trim(),p_due_date:due,p_assigned_to:assignee.id});toast('Task updated');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not update')}}
 async function deleteTask(id){if(!confirm('Delete this task?'))return;try{await managerCall('manager_delete_task',{p_task_id:id});toast('Task deleted');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not delete')}}
 async function replyAndResolve(id){const response=$('reply-'+id)?.value.trim();if(!response)return toast('Enter a response first');try{await managerCall('manager_reply_help',{p_task_id:id,p_response:response});toast('Response sent and help resolved');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not send response')}}
 async function reopenTask(id){if(!confirm('Reopen this completed task?'))return;try{await managerCall('manager_set_task_status',{p_task_id:id,p_status:'pending'});toast('Task reopened');await loadManagerData();renderBoard()}catch(e){toast(e.message||'Could not reopen task')}}
-function renderRequests(){const d=currentDealerData();const list=[...d.requests].sort((a,b)=>{const sa=a.status==='resolved'?1:0,sb=b.status==='resolved'?1:0;return sa-sb||new Date(b.created_at)-new Date(a.created_at)});$('tab-requests').innerHTML=list.length?list.map(r=>{const statusLabel=r.status==='in_progress'?'IN PROGRESS':r.status.toUpperCase();return `<div class="request-card ${r.status}"><div class="request-top"><div><div class="request-title">${escapeHtml(r.subject)}</div><div class="request-meta">${escapeHtml(r.category)} • ${escapeHtml(personName(r.person_id))} • ${escapeHtml(dealerName(r.dealer_id))}</div></div><span class="status ${r.status}">${statusLabel}</span></div><div class="request-meta">Raised: ${fmtTs(r.created_at)}</div><div class="request-details">${escapeHtml(r.details)}</div>${r.manager_response?`<div class="request-response"><b>Previous response:</b> ${escapeHtml(r.manager_response)}${r.responded_at?`<div class="small">Replied: ${fmtTs(r.responded_at)}</div>`:''}</div>`:''}${r.status!=='resolved'?`<div class="request-response"><textarea id="reqreply-${r.id}" placeholder="Type guidance / support / response to the employee..."></textarea><div class="request-actions"><button class="btn btn-secondary" onclick="respondRequest('${r.id}','in_progress')">Reply / Keep Open</button><button class="btn btn-accent" onclick="respondRequest('${r.id}','resolved')">Reply & Close</button></div></div>`:''}</div>`}).join(''):'<div class="empty">No support requests for this dealership.</div>'}
+function renderRequests(){const d=currentDealerData();const cutoff=Date.now()-7*24*60*60*1000;const list=[...d.requests].filter(r=>r.status!=='resolved'||!r.resolved_at||new Date(r.resolved_at).getTime()>=cutoff).sort((a,b)=>{const sa=a.status==='resolved'?1:0,sb=b.status==='resolved'?1:0;return sa-sb||new Date(b.created_at)-new Date(a.created_at)});$('tab-requests').innerHTML=list.length?list.map(r=>{const statusLabel=r.status==='in_progress'?'IN PROGRESS':r.status.toUpperCase();return `<div class="request-card ${r.status}"><div class="request-top"><div><div class="request-title">${escapeHtml(r.subject)}</div><div class="request-meta">${escapeHtml(r.category)} • ${escapeHtml(personName(r.person_id))} • ${escapeHtml(dealerName(r.dealer_id))}</div></div><span class="status ${r.status}">${statusLabel}</span></div><div class="request-meta">Raised: ${fmtTs(r.created_at)}</div><div class="request-details">${escapeHtml(r.details)}</div>${r.manager_response?`<div class="request-response"><b>Previous response:</b> ${escapeHtml(r.manager_response)}${r.responded_at?`<div class="small">Replied: ${fmtTs(r.responded_at)}</div>`:''}</div>`:''}${r.status!=='resolved'?`<div class="request-response"><textarea id="reqreply-${r.id}" placeholder="Type guidance / support / response to the employee..."></textarea><div class="request-actions"><button class="btn btn-secondary" onclick="respondRequest('${r.id}','in_progress')">Reply / Keep Open</button><button class="btn btn-accent" onclick="respondRequest('${r.id}','resolved')">Reply & Close</button></div></div>`:''}</div>`}).join(''):'<div class="empty">No support requests for this dealership.</div>'}
 async function respondRequest(id,status){const response=$('reqreply-'+id)?.value.trim();if(!response)return toast('Enter a response first');try{await managerCall('manager_respond_request',{p_request_id:id,p_response:response,p_status:status});toast(status==='resolved'?'Request replied and closed':'Response sent; request kept open');await loadManagerData();renderRequests()}catch(e){toast(e.message||'Could not respond to request')}}
 
 function renderRecurringPeople(){const did=currentManagerDealerId;const pp=people.filter(p=>p.dealer_id===did);$('recAssignChips').innerHTML=pp.length?pp.map(p=>`<div class="chip ${selectedRecurringAssignees.has(p.id)?'selected':''}" onclick="toggleRecurringAssignee('${p.id}')">${escapeHtml(p.name)}</div>`).join(''):'<div class="small">No employees in this dealership.</div>'}
 function toggleRecurringAssignee(id){selectedRecurringAssignees.has(id)?selectedRecurringAssignees.delete(id):selectedRecurringAssignees.add(id);renderRecurringPeople()}
-function renderRecurrenceSchedule(){const type=$('recType').value;let h='';if(type==='daily')h='<div class="small">A task occurrence is created every day.</div>';if(type==='weekly')h='<div class="field"><label>Weekday(s)</label><div class="schedule-days">'+[['1','Mon'],['2','Tue'],['3','Wed'],['4','Thu'],['5','Fri'],['6','Sat'],['7','Sun']].map(x=>`<div class="day-chip" data-day="${x[0]}" onclick="toggleWeekday(this)">${x[1]}</div>`).join('')+'</div></div>';if(type==='monthly_fixed')h='<div class="field"><label>Day of month</label><select id="recDay">'+Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')+'</select></div>';if(type==='monthly_due_by')h='<div class="field"><label>Due by day</label><select id="recDueBy">'+Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')+'</select></div><div class="small">The monthly task is created for the month and becomes overdue if not completed by the deadline.</div>';if(type==='monthly_weekday')h='<div class="two"><div class="field"><label>Week</label><select id="recWeek"><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option><option value="5">5th</option></select></div><div class="field"><label>Day</label><select id="recWeekday"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="7">Sunday</option></select></div></div>';$('recSchedule').innerHTML=h}
+function renderRecurrenceSchedule(){const type=$('recType').value;let h='';if(type==='daily')h='<div class="small">A task occurrence is created every working day. Sunday is a holiday and no task is generated.</div>';if(type==='weekly')h='<div class="field"><label>Weekday(s)</label><div class="schedule-days">'+[['1','Mon'],['2','Tue'],['3','Wed'],['4','Thu'],['5','Fri'],['6','Sat']].map(x=>`<div class="day-chip" data-day="${x[0]}" onclick="toggleWeekday(this)">${x[1]}</div>`).join('')+'</div></div>';if(type==='monthly_fixed')h='<div class="field"><label>Day of month</label><select id="recDay">'+Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')+'</select></div>';if(type==='monthly_due_by')h='<div class="field"><label>Due by day</label><select id="recDueBy">'+Array.from({length:28},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')+'</select></div><div class="small">The monthly task is created for the month and becomes overdue if not completed by the deadline.</div>';if(type==='monthly_weekday')h='<div class="two"><div class="field"><label>Week</label><select id="recWeek"><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option><option value="5">5th</option></select></div><div class="field"><label>Day</label><select id="recWeekday"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></div></div>';$('recSchedule').innerHTML=h}
 function toggleWeekday(el){el.classList.toggle('selected')}
 function getRecurringSchedule(){const type=$('recType').value;if(type==='daily')return {};if(type==='weekly')return {weekdays:[...document.querySelectorAll('#recSchedule .day-chip.selected')].map(x=>Number(x.dataset.day))};if(type==='monthly_fixed')return {day_of_month:Number($('recDay').value)};if(type==='monthly_due_by')return {due_by_day:Number($('recDueBy').value)};return {week_no:Number($('recWeek').value),weekday:Number($('recWeekday').value)}}
 function recurrenceLabel(r){const s=r.schedule||{};if(r.recurrence_type==='daily')return 'Daily';if(r.recurrence_type==='weekly')return `Weekly • ${(s.weekdays||[]).map(n=>['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][n]).join(', ')}`;if(r.recurrence_type==='monthly_fixed')return `Monthly • Day ${s.day_of_month}`;if(r.recurrence_type==='monthly_due_by')return `Monthly • Due by ${s.due_by_day}`;return `Monthly • ${['','1st','2nd','3rd','4th','5th'][s.week_no]} ${['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][s.weekday]}`}
-async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'&&!schedule.weekdays.length)return toast('Select at least one weekday');if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();await loadManagerData();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
+async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'){schedule.weekdays=(schedule.weekdays||[]).filter(d=>d!==7);if(!schedule.weekdays.length)return toast('Select at least one weekday (Sunday is a holiday)');}if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();await loadManagerData();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
 function renderRecurringList(){
   const panel=$('tab-recurring');
   const target=$('recurringList');
