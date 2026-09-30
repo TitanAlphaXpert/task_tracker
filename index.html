@@ -425,8 +425,14 @@ async function sendCurrentReportNow(){
     toast(`Report sent to ${count} recipient${count===1?'':'s'}`);
   }catch(e){
     console.error('Manual report send error:',e);
-    const msg=e?.context?.body?.error||e?.message||String(e);
-    info.textContent='Report was not sent. Check the reporting email service configuration.';
+    let msg=e?.message||String(e);
+    try{
+      const raw=e?.context?.body;
+      const body=typeof raw==='string'?JSON.parse(raw):raw;
+      if(body?.error) msg=body.error;
+      if(body?.stage) msg=`${body.stage}: ${msg}`;
+    }catch(_){}
+    info.textContent='Report was not sent. The reporting function returned an error; the exact reason is shown below.';
     toast(msg);
   }finally{btn.disabled=false;btn.textContent='Send This Report Now';}
 }
