@@ -53,7 +53,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
   <div id="screen-person" class="hidden">
     <div class="back-row"><button class="back-btn" onclick="logout()">← Change user</button></div>
     <div class="session" id="employeeSession"></div>
-    <div class="odo-wrap"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div>
+    <div class="odo-wrap"><div style="width:100%"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div><div id="streakPenaltyMsg" class="small" style="margin-top:10px"></div></div></div>
     <div class="manager-card">
       <div class="section-label">Need CSM / Manager Support?</div>
       <div class="small" style="margin:5px 0 10px">Raise a request for guidance, technical support, customer issues, approvals, or other help.</div>
@@ -237,7 +237,7 @@ function renderPerson(){
 }
 function renderStreak(my){
   const doneDates=new Set(my.filter(x=>["done","late"].includes(x.status)).map(x=>x.completed_at?.slice(0,10)).filter(Boolean));
-  let n=0,d=istNow();
+  let baseStreak=0,d=istNow();
 
   // Streak follows working days only. Sunday is a weekly holiday and is skipped.
   // On Monday, if today's task is not completed yet, preserve the streak from Saturday
@@ -251,7 +251,7 @@ function renderStreak(my){
 
     const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     if(doneDates.has(ds)){
-      n++;
+      baseStreak++;
       d.setDate(d.getDate()-1);
       continue;
     }
@@ -264,7 +264,36 @@ function renderStreak(my){
     break;
   }
 
-  $("odoDigits").innerHTML=String(n).padStart(3,"0").split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
+  // Penalty: every incomplete task whose due date has passed costs 1 point
+  // for every calendar day it remains overdue. Completed / completed-late tasks
+  // do not carry an overdue penalty.
+  const todayIso=today();
+  const todayUtc=(()=>{
+    const [y,m,day]=todayIso.split("-").map(Number);
+    return Date.UTC(y,m-1,day);
+  })();
+
+  let penalty=0;
+  my.forEach(t=>{
+    if(["done","late"].includes(t.status)||t.completed_at)return;
+    if(!t.due_date||t.due_date>=todayIso)return;
+    const [y,m,day]=t.due_date.split("-").map(Number);
+    const dueUtc=Date.UTC(y,m-1,day);
+    const overdueDays=Math.floor((todayUtc-dueUtc)/86400000);
+    if(overdueDays>0) penalty+=overdueDays;
+  });
+
+  const score=baseStreak-penalty;
+  const scoreText=score<0?`-${String(Math.abs(score)).padStart(3,"0")}`:String(score).padStart(3,"0");
+  $("odoDigits").innerHTML=scoreText.split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
+
+  const penaltyMsg=$("streakPenaltyMsg");
+  if(penaltyMsg){
+    penaltyMsg.innerHTML=penalty>0
+      ? `Penalty deducted: <b>-${penalty} point${penalty===1?"":"s"}</b> for pending due task${penalty===1?"":"s"}.`
+      : "No penalty — no pending overdue tasks.";
+    penaltyMsg.style.color=penalty>0?"var(--danger)":"var(--muted)";
+  }
 }
 function renderEmployeeCard(t,overdue=false){
   const isOverdue=!['done','late'].includes(t.status)&&t.due_date<today();
