@@ -228,7 +228,7 @@ function renderPerson(){
   const recentCompleted=my.filter(completedWithinTwoDays).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at));
   const visible=open.map(t=>renderEmployeeCard(t));
   if(recentCompleted.length){
-    visible.push('<div class="subhead" style="margin-top:14px">Recently Completed • Reopen within 2 days</div>');
+    visible.push('<div class="subhead" style="margin-top:14px">Recently Completed</div>');
     visible.push(...recentCompleted.map(t=>renderEmployeeCard(t)));
   }
   $("todayTasks").innerHTML=visible.length?visible.join(""):'<div class="empty">No open tasks. 🎉</div>';
