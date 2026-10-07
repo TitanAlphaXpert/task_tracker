@@ -173,10 +173,63 @@ async function rpc(name,args={}){
   if(!sb) throw new Error("Supabase is not configured. Add URL and publishable key in index.html.");
   const {data,error}=await sb.rpc(name,args); if(error) throw error; return data;
 }
-async function loadDealers(){
+
+/* ---------- LIGHTWEIGHT SESSION CACHING ---------- */
+/* Dealerships and manpower change rarely, so avoid repeatedly querying them.
+   Cache is browser-local and automatically expires; explicit manager changes
+   invalidate the relevant cache immediately. */
+const CACHE_TTL_DEALERS=60*60*1000;   // 1 hour
+const CACHE_TTL_PEOPLE=30*60*1000;    // 30 minutes
+const CACHE_TTL_MANAGERS=30*60*1000;  // 30 minutes
+
+function readCache(key,maxAge){
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw)return null;
+    const item=JSON.parse(raw);
+    if(!item||!item.ts||Date.now()-item.ts>maxAge){localStorage.removeItem(key);return null}
+    return item.data;
+  }catch(_){return null}
+}
+function writeCache(key,data){
+  try{localStorage.setItem(key,JSON.stringify({ts:Date.now(),data}))}catch(_){}
+}
+function clearCache(key){
+  try{localStorage.removeItem(key)}catch(_){}
+}
+function peopleCacheKey(dealerId){return `eicher_tt_people_${dealerId}`}
+function invalidatePeopleCache(dealerId){if(dealerId)clearCache(peopleCacheKey(dealerId))}
+
+function dailyFlagKey(scope,id=""){return `eicher_tt_${scope}_${id}_${today()}`}
+function wasDoneToday(scope,id=""){try{return localStorage.getItem(dailyFlagKey(scope,id))==="1"}catch(_){return false}}
+function markDoneToday(scope,id=""){try{localStorage.setItem(dailyFlagKey(scope,id),"1")}catch(_){}}
+
+async function ensureEmployeeRecurringGeneratedToday(){
+  if(!currentPerson)return;
+  const key=currentPerson.id;
+  if(wasDoneToday("employee_recurring",key))return;
+  await rpc("employee_generate_recurring_tasks",{p_person_id:key,p_pin:$("employeePin").value});
+  markDoneToday("employee_recurring",key);
+}
+async function ensureManagerRecurringGeneratedToday(){
+  if(!managerUnlocked||!currentManager)return;
+  const key=currentManager.id;
+  if(wasDoneToday("manager_recurring",key))return;
+  await managerCall("manager_generate_recurring_tasks");
+  markDoneToday("manager_recurring",key);
+}
+async function loadRecurringTasks(){
+  if(!currentManagerDealerId||!managerUnlocked)return;
+  recurringTasks=await managerCall("manager_get_recurring_tasks");
+  renderRecurringList();
+}
+
+async function loadDealers(force=false){
   try{
     if(!sb){$("dealerSelect").innerHTML="<option>Configure Supabase first</option>";return}
-    dealers=await rpc("public_get_dealers");
+    let cached=!force?readCache("eicher_tt_dealers",CACHE_TTL_DEALERS):null;
+    dealers=Array.isArray(cached)?cached:await rpc("public_get_dealers");
+    if(!cached)writeCache("eicher_tt_dealers",dealers);
     $("dealerSelect").innerHTML='<option value="">Select dealership</option>'+dealers.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
     currentDealerId="";
   }catch(e){console.error(e);toast(e.message||"Could not load dealerships")}
@@ -188,17 +241,29 @@ async function continueToEmployees(){
   $("employeeDealerLabel").textContent=dealerName(currentDealerId);
   showScreen("screen-employee-select");
 }
-async function loadPeopleForDealer(){
+async function loadPeopleForDealer(force=false){
   currentDealerId=$("dealerSelect").value;if(!currentDealerId)return;
   try{
-    people=await rpc("public_get_people",{p_dealer_id:currentDealerId});
+    let cached=!force?readCache(peopleCacheKey(currentDealerId),CACHE_TTL_PEOPLE):null;
+    people=Array.isArray(cached)?cached:await rpc("public_get_people",{p_dealer_id:currentDealerId});
+    if(!cached)writeCache(peopleCacheKey(currentDealerId),people);
     $("personGrid").innerHTML=people.length?people.map(p=>`<div class="person-tile" onclick="selectPerson('${p.id}')"><div class="person-avatar">${initials(p.name)}</div><div class="person-name">${escapeHtml(p.name)}</div></div>`).join(""):'<div class="empty" style="grid-column:1/-1">No employees added yet.</div>';
   }catch(e){toast(e.message||"Could not load employees")}
 }
 function selectPerson(id){currentPerson=people.find(p=>p.id===id);$("employeeLoginLabel").textContent=currentPerson?.name||"";$("employeePin").value="";showScreen("screen-employee-pin");setTimeout(()=>$("employeePin").focus(),100)}
 async function employeeLogin(){
   if(!currentPerson)return;
-  try{await rpc("employee_verify",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});await rpc("employee_generate_recurring_tasks",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});await loadEmployeeTasks();showScreen("screen-person")}catch(e){toast("Incorrect PIN")}
+  try{
+    const pin=$("employeePin").value;
+    const verified=await rpc("employee_verify",{p_person_id:currentPerson.id,p_pin:pin});
+    if(!verified)return toast("Incorrect PIN");
+    await ensureEmployeeRecurringGeneratedToday();
+    await loadEmployeeTasks();
+    showScreen("screen-person");
+  }catch(e){
+    console.error("Employee login error:",e);
+    toast(e?.message||"Could not load your tasks");
+  }
 }
 async function loadEmployeeTasks(){
   const data=await rpc("employee_get_tasks",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});
@@ -341,8 +406,12 @@ function renderMyRequests(){
 /* ---------- MANAGER ---------- */
 async function openManager(){
   currentManager=null; currentManagerDealerId=null; managerUnlocked=false;
-  try{ managers=await rpc("public_get_managers"); renderManagerList(); showScreen("screen-manager-list"); }
-  catch(e){toast(e.message||"Could not load managers")}
+  try{
+    const cached=readCache("eicher_tt_managers",CACHE_TTL_MANAGERS);
+    managers=Array.isArray(cached)?cached:await rpc("public_get_managers");
+    if(!cached)writeCache("eicher_tt_managers",managers);
+    renderManagerList(); showScreen("screen-manager-list");
+  }catch(e){toast(e.message||"Could not load managers")}
 }
 function renderManagerList(){
   $("managerGrid").innerHTML=managers.length?managers.map(m=>`<div class="manager-tile" onclick="selectManager('${m.id}')"><div class="person-avatar">${initials(m.name)}</div><div class="person-name">${escapeHtml(m.name)}</div><div class="manager-role">ACTIVE MANAGER</div></div>`).join(""):'<div class="empty" style="grid-column:1/-1">No active managers configured.</div>';
@@ -352,8 +421,10 @@ function selectManager(id){
   $("managerLoginLabel").textContent=currentManager.name; $("managerPin").value="";
   showScreen("screen-manager-pin"); setTimeout(()=>$('managerPin').focus(),100);
 }
-async function loadAllDealersForManager(){
-  window.allDealersForManager=await rpc("public_get_dealers");
+async function loadAllDealersForManager(force=false){
+  const cached=!force?readCache("eicher_tt_all_dealers",CACHE_TTL_DEALERS):null;
+  window.allDealersForManager=Array.isArray(cached)?cached:await rpc("public_get_dealers");
+  if(!cached)writeCache("eicher_tt_all_dealers",window.allDealersForManager);
 }
 async function managerLogin(){
   if(!currentManager)return toast("Select a manager first");
@@ -396,19 +467,21 @@ function renderManagerHub(){
 async function enterManagerDealership(id){
   if(!dealers.some(d=>d.id===id))return toast("Dealership not assigned to this manager");
   currentManagerDealerId=id;
-  await loadManagerData();
-  $('managerSession').textContent=`${currentManager.name} • ${dealerName(currentManagerDealerId)}`;
-  showScreen('screen-manager'); switchTab('dashboard');
+  try{
+    await ensureManagerRecurringGeneratedToday();
+    await loadManagerData();
+    $('managerSession').textContent=`${currentManager.name} • ${dealerName(currentManagerDealerId)}`;
+    showScreen('screen-manager'); switchTab('dashboard');
+  }catch(e){
+    console.error("Manager dealership load error:",e);
+    toast(e?.message||"Could not load dealership dashboard");
+  }
 }
 async function loadManagerData(){
-  await managerCall('manager_generate_recurring_tasks');
   const d=await managerCall('manager_get_data');
   dealers=d.dealers||[]; people=d.people||[]; tasks=d.tasks||[]; requests=d.requests||[];
-  recurringTasks=await managerCall('manager_get_recurring_tasks');
   populateDealerContext();
   renderDashboard();
-  const activeTab=document.querySelector('.tab.active')?.dataset.tab;
-  if(activeTab==='recurring') renderRecurringList();
 }
 function populateDealerContext(){
   const dealer=dealers.find(d=>d.id===currentManagerDealerId);
@@ -433,7 +506,7 @@ function switchTab(name){
   if(name==='assign')renderAssignPeople();
   if(name==='board')renderBoard();
   if(name==='requests')renderRequests();
-  if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();renderRecurringList();}
+  if(name==='recurring'){renderRecurringPeople();renderRecurrenceSchedule();loadRecurringTasks().catch(e=>{console.error(e);toast(e?.message||'Could not load recurring tasks')});}
   if(name==='team')renderTeam();
   if(name==='reports'){loadReport();loadReportRecipients();}
 }
@@ -571,7 +644,7 @@ function renderRecurrenceSchedule(){const type=$('recType').value;let h='';if(ty
 function toggleWeekday(el){el.classList.toggle('selected')}
 function getRecurringSchedule(){const type=$('recType').value;if(type==='daily')return {};if(type==='weekly')return {weekdays:[...document.querySelectorAll('#recSchedule .day-chip.selected')].map(x=>Number(x.dataset.day))};if(type==='monthly_fixed')return {day_of_month:Number($('recDay').value)};if(type==='monthly_due_by')return {due_by_day:Number($('recDueBy').value)};return {week_no:Number($('recWeek').value),weekday:Number($('recWeekday').value)}}
 function recurrenceLabel(r){const s=r.schedule||{};if(r.recurrence_type==='daily')return 'Daily';if(r.recurrence_type==='weekly')return `Weekly • ${(s.weekdays||[]).map(n=>['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][n]).join(', ')}`;if(r.recurrence_type==='monthly_fixed')return `Monthly • Day ${s.day_of_month}`;if(r.recurrence_type==='monthly_due_by')return `Monthly • Due by ${s.due_by_day}`;return `Monthly • ${['','1st','2nd','3rd','4th','5th'][s.week_no]} ${['','Mon','Tue','Wed','Thu','Fri','Sat','Sun'][s.weekday]}`}
-async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'){schedule.weekdays=(schedule.weekdays||[]).filter(d=>d!==7);if(!schedule.weekdays.length)return toast('Select at least one weekday (Sunday is a holiday)');}if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();await loadManagerData();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
+async function createRecurringTask(){const title=$('recTitle').value.trim(),did=currentManagerDealerId,type=$('recType').value,start=$('recStart').value,end=$('recEnd').value,schedule=getRecurringSchedule();if(!title||!did||!start||!selectedRecurringAssignees.size)return toast('Enter title, dealer, start date and at least one employee');if(type==='weekly'){schedule.weekdays=(schedule.weekdays||[]).filter(d=>d!==7);if(!schedule.weekdays.length)return toast('Select at least one weekday (Sunday is a holiday)');}if(end&&end<start)return toast('End date cannot be before start date');try{for(const pid of selectedRecurringAssignees)await managerCall('manager_create_recurring_task',{p_dealer_id:did,p_assigned_to:pid,p_title:title,p_recurrence_type:type,p_schedule:schedule,p_start_date:start,p_end_date:end||null});await managerCall('manager_generate_recurring_tasks');markDoneToday('manager_recurring',currentManager.id);toast('Recurring task created');$('recTitle').value='';selectedRecurringAssignees.clear();switchTab('recurring')}catch(e){toast(e.message||'Could not create recurring task')}}
 function renderRecurringList(){
   const panel=$('tab-recurring');
   const target=$('recurringList');
@@ -582,12 +655,12 @@ function renderRecurringList(){
   const cards=list.length?list.map(r=>`<div class="recurring-card ${r.active?'':'paused'}"><div class="recurring-top"><div><div class="recurring-title">${escapeHtml(r.title)}</div><div class="recurring-meta">${escapeHtml(personName(r.assigned_to))}<br>${recurrenceLabel(r)} • Start ${fmtDate(r.start_date)}${r.end_date?' • End '+fmtDate(r.end_date):''}</div></div><span class="mini ${r.active?'done':''}">${r.active?'ACTIVE':'PAUSED'}</span></div><div class="recurring-actions"><button class="btn btn-secondary" onclick="toggleRecurring('${r.id}',${!r.active})">${r.active?'Pause':'Resume'}</button><button class="btn btn-secondary" onclick="editRecurring('${r.id}')">Edit</button><button class="btn btn-danger" onclick="deleteRecurring('${r.id}')">Delete</button></div></div>`).join(''):'<div class="empty">No recurring tasks configured for this dealership.</div>';
   $('recurringList').innerHTML='<div class="subhead">Active / Paused Recurring Tasks</div>'+cards;
 }
-async function toggleRecurring(id,active){try{await managerCall('manager_set_recurring_active',{p_recurring_id:id,p_active:active});toast(active?'Recurring task resumed':'Recurring task paused');await loadManagerData()}catch(e){toast(e.message||'Could not update recurring task')}}
-async function deleteRecurring(id){if(!confirm('Delete this recurring task rule? Existing generated task history will remain.'))return;try{await managerCall('manager_delete_recurring_task',{p_recurring_id:id});toast('Recurring task deleted');await loadManagerData()}catch(e){toast(e.message||'Could not delete recurring task')}}
-async function editRecurring(id){const r=recurringTasks.find(x=>x.id===id);if(!r)return;const title=prompt('Task title:',r.title);if(title===null)return;const start=prompt('Start date (YYYY-MM-DD):',r.start_date);if(start===null)return;const end=prompt('End date (YYYY-MM-DD, blank for none):',r.end_date||'');if(end===null)return;if(end&&end<start)return toast('End date cannot be before start date');try{await managerCall('manager_update_recurring_task',{p_recurring_id:id,p_title:title.trim(),p_start_date:start,p_end_date:end||null});toast('Recurring task updated');await loadManagerData()}catch(e){toast(e.message||'Could not update recurring task')}}
+async function toggleRecurring(id,active){try{await managerCall('manager_set_recurring_active',{p_recurring_id:id,p_active:active});await managerCall('manager_generate_recurring_tasks');markDoneToday('manager_recurring',currentManager.id);toast(active?'Recurring task resumed':'Recurring task paused');await loadRecurringTasks()}catch(e){toast(e.message||'Could not update recurring task')}}
+async function deleteRecurring(id){if(!confirm('Delete this recurring task rule? Existing generated task history will remain.'))return;try{await managerCall('manager_delete_recurring_task',{p_recurring_id:id});toast('Recurring task deleted');await loadRecurringTasks()}catch(e){toast(e.message||'Could not delete recurring task')}}
+async function editRecurring(id){const r=recurringTasks.find(x=>x.id===id);if(!r)return;const title=prompt('Task title:',r.title);if(title===null)return;const start=prompt('Start date (YYYY-MM-DD):',r.start_date);if(start===null)return;const end=prompt('End date (YYYY-MM-DD, blank for none):',r.end_date||'');if(end===null)return;if(end&&end<start)return toast('End date cannot be before start date');try{await managerCall('manager_update_recurring_task',{p_recurring_id:id,p_title:title.trim(),p_start_date:start,p_end_date:end||null});await managerCall('manager_generate_recurring_tasks');markDoneToday('manager_recurring',currentManager.id);toast('Recurring task updated');await loadRecurringTasks()}catch(e){toast(e.message||'Could not update recurring task')}}
 function renderTeam(){const d=currentDealerData();$('peopleList').innerHTML=d.people.map(p=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b>${escapeHtml(p.name)}</b><div class="small">PIN protected</div></div><button class="btn btn-danger" onclick="removePerson('${p.id}')">Remove</button></div></div>`).join('')||'<div class="empty">No employees in this dealership.</div>'}
-async function addPerson(){const did=currentManagerDealerId,name=$('newPersonName').value.trim(),pin=$('newPersonPin').value.trim();if(!name||!/^[0-9]{4,6}$/.test(pin))return toast('Name + 4–6 digit PIN required');try{await managerCall('manager_add_person',{p_dealer_id:did,p_name:name,p_employee_pin:pin});toast('Employee added');$('newPersonName').value='';$('newPersonPin').value='';await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not add employee')}}
-async function removePerson(id){if(!confirm('Remove this employee? Existing tasks will remain in history.'))return;try{await managerCall('manager_remove_person',{p_person_id:id});toast('Employee removed');await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not remove employee')}}
+async function addPerson(){const did=currentManagerDealerId,name=$('newPersonName').value.trim(),pin=$('newPersonPin').value.trim();if(!name||!/^[0-9]{4,6}$/.test(pin))return toast('Name + 4–6 digit PIN required');try{await managerCall('manager_add_person',{p_dealer_id:did,p_name:name,p_employee_pin:pin});invalidatePeopleCache(did);toast('Employee added');$('newPersonName').value='';$('newPersonPin').value='';await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not add employee')}}
+async function removePerson(id){if(!confirm('Remove this employee? Existing tasks will remain in history.'))return;try{await managerCall('manager_remove_person',{p_person_id:id});invalidatePeopleCache(currentManagerDealerId);toast('Employee removed');await loadManagerData();renderTeam()}catch(e){toast(e.message||'Could not remove employee')}}
 
 async function updateMyManagerProfile(){
   const name=$("myManagerName").value.trim(),pin=$("myManagerNewPin").value.trim();
@@ -597,7 +670,7 @@ async function updateMyManagerProfile(){
 }
 async function createMyDealership(){
   const name=$("newDealerName").value.trim(); if(!name)return toast("Enter dealership name");
-  try{await managerCall("manager_create_dealership",{p_name:name});const profile=await managerCall("manager_get_profile");dealers=profile.dealers||[];$("newDealerName").value="";await loadAllDealersForManager();renderManagerHub();toast("Dealership added")}catch(e){toast(e.message||"Could not add dealership")}
+  try{await managerCall("manager_create_dealership",{p_name:name});const profile=await managerCall("manager_get_profile");dealers=profile.dealers||[];clearCache("eicher_tt_dealers");clearCache("eicher_tt_all_dealers");$("newDealerName").value="";await loadAllDealersForManager(true);renderManagerHub();toast("Dealership added")}catch(e){toast(e.message||"Could not add dealership")}
 }
 function renderManagerDealerChips(){ $("managerDealerChips").innerHTML=(window.allDealersForManager||[]).map(d=>`<div class="chip ${selectedManagerDealers.has(d.id)?'selected':''}" onclick="toggleManagerDealer('${d.id}')">${escapeHtml(d.name)}</div>`).join("") }
 function toggleManagerDealer(id){selectedManagerDealers.has(id)?selectedManagerDealers.delete(id):selectedManagerDealers.add(id);renderManagerDealerChips()}
