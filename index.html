@@ -54,6 +54,12 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="back-row"><button class="back-btn" onclick="logout()">← Change user</button></div>
     <div class="session" id="employeeSession"></div>
     <div class="odo-wrap"><div style="width:100%"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div><div id="streakPenaltyMsg" class="small" style="margin-top:10px"></div></div></div>
+    <div class="manager-card" id="freezeCard">
+      <div class="section-label">🧊 Streak Freeze Spills</div>
+      <div class="small" id="freezeStatus" style="margin:6px 0 10px">Loading your monthly freeze balance...</div>
+      <button class="btn btn-secondary btn-wide" id="freezeBtn" onclick="useFreezeSpill()">🧊 Freeze Today</button>
+      <div class="small" style="margin-top:8px">Use up to 3 spills per calendar month. Freezing today protects your streak and shifts every open task's due date by one day.</div>
+    </div>
     <div class="manager-card">
       <div class="section-label">Need CSM / Manager Support?</div>
       <div class="small" style="margin:5px 0 10px">Raise a request for guidance, technical support, customer issues, approvals, or other help.</div>
@@ -155,6 +161,7 @@ const sb = (SUPABASE_URL.startsWith("http") && !SUPABASE_ANON_KEY.startsWith("PA
 
 /* ---------- STATE ---------- */
 let dealers=[], people=[], tasks=[], requests=[], recurringTasks=[], managers=[], currentDealerId=null, currentPerson=null, currentManager=null, currentManagerDealerId=null, managerUnlocked=false, selectedAssignees=new Set(), selectedRecurringAssignees=new Set(), selectedManagerDealers=new Set();
+let freezeStatus={used:0,limit:3,frozen_dates:[]};
 
 const $=id=>document.getElementById(id);
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2200)}
@@ -268,8 +275,10 @@ async function employeeLogin(){
 async function loadEmployeeTasks(){
   const data=await rpc("employee_get_tasks",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});
   tasks=data.tasks||[];requests=data.requests||[];currentPerson=data.person;
+  try{freezeStatus=await rpc("employee_get_freeze_status",{p_person_id:currentPerson.id,p_pin:$("employeePin").value})||{used:0,limit:3,frozen_dates:[]};}catch(e){console.error("Freeze status load:",e);freezeStatus={used:0,limit:3,frozen_dates:[],unavailable:true};}
   $("employeeSession").textContent=`${currentPerson.name} • ${currentPerson.dealer_name}`;
   renderPerson();
+  renderFreezeStatus();
 }
 function elapsedDays(t){
   const start=new Date(t.assigned_at||t.created_at);
@@ -315,6 +324,11 @@ function renderStreak(my){
     }
 
     const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    if((freezeStatus.frozen_dates||[]).includes(ds)){
+      baseStreak++;
+      d.setDate(d.getDate()-1);
+      continue;
+    }
     if(doneDates.has(ds)){
       baseStreak++;
       d.setDate(d.getDate()-1);
@@ -360,6 +374,26 @@ function renderStreak(my){
     penaltyMsg.style.color=penalty>0?"var(--danger)":"var(--muted)";
   }
 }
+function renderFreezeStatus(){
+  const status=$("freezeStatus"),btn=$("freezeBtn");if(!status||!btn)return;
+  const used=Number(freezeStatus.used||0),limit=Number(freezeStatus.limit||3),frozenToday=(freezeStatus.frozen_dates||[]).includes(today());
+  if(freezeStatus.unavailable){status.textContent="Freeze feature needs its database migration installed by the tracker administrator.";btn.disabled=true;return;}
+  status.textContent=frozenToday?`Today is frozen. ${Math.max(0,limit-used)} spill${limit-used===1?"":"s"} left this month.`:`${Math.max(0,limit-used)} of ${limit} freeze spills remaining this month.`;
+  btn.disabled=frozenToday||used>=limit;
+  btn.textContent=frozenToday?"✓ Today Is Frozen":used>=limit?"No Spills Left This Month":"🧊 Freeze Today";
+}
+async function useFreezeSpill(){
+  if(!currentPerson)return;
+  if(!confirm("Use 1 Freeze Spill for today? All your open task due dates will move forward by one day, and today will be protected in your streak. This cannot be undone."))return;
+  const btn=$("freezeBtn");if(btn)btn.disabled=true;
+  try{
+    const result=await rpc("employee_use_freeze_spill",{p_person_id:currentPerson.id,p_pin:$("employeePin").value});
+    if(result?.ok===false)throw new Error(result.message||"Could not freeze today");
+    toast("Freeze Spill used. Today's tasks and streak are protected.");
+    await loadEmployeeTasks();
+  }catch(e){console.error("Freeze spill error:",e);toast(e?.message||"Could not use Freeze Spill");renderFreezeStatus();}
+}
+
 function renderEmployeeCard(t,overdue=false){
   const isOverdue=!['done','late'].includes(t.status)&&t.due_date<today();
   const late=t.status==="late", done=t.status==="done";
@@ -618,8 +652,8 @@ async function deleteReportRecipient(id){
 
 
 function renderDashboard(){
-  const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at).length, late=d.tasks.filter(t=>t.status==='late').length, done=d.tasks.filter(t=>t.status==='done').length, help=d.tasks.filter(t=>t.status==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
-  $('tab-dashboard').innerHTML=`<div class="manager-card"><b>${escapeHtml(d.dealer?.name||'Dealership')}</b><div class="small">Manager view is restricted to this dealership.</div></div><div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open Tasks</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed Late</div></div><div class="manager-card"><b>${help}</b><div class="small">Task Help Requests</div></div><div class="manager-card"><b>${openRequests}</b><div class="small">Open Requests</div></div><div class="manager-card"><b>${d.people.length}</b><div class="small">Active Employees</div></div></div>`;
+  const d=currentDealerData(), open=d.tasks.filter(t=>!['done','late'].includes(String(t.status||'').toLowerCase())&&!t.completed_at).length, late=d.tasks.filter(t=>String(t.status||'').toLowerCase()==='late').length, done=d.tasks.filter(t=>String(t.status||'').toLowerCase()==='done').length, help=d.tasks.filter(t=>String(t.status||'').toLowerCase()==='help').length, openRequests=d.requests.filter(r=>r.status!=='resolved').length;
+  $('tab-dashboard').innerHTML=`<div class="manager-card"><b>${escapeHtml(d.dealer?.name||'Dealership')}</b><div class="small">Manager view is restricted to this dealership.</div></div><div class="two"><div class="manager-card"><b>${open}</b><div class="small">Open / Pending Tasks</div></div><div class="manager-card"><b>${done}</b><div class="small">Completed On Time</div></div><div class="manager-card"><b>${late}</b><div class="small">Completed Late</div></div><div class="manager-card"><b>${help}</b><div class="small">Task Help Requests</div></div><div class="manager-card"><b>${openRequests}</b><div class="small">Open Requests</div></div><div class="manager-card"><b>${d.people.length}</b><div class="small">Active Employees</div></div></div>`;
 }
 function renderAssignPeople(){const did=currentManagerDealerId;const pp=people.filter(p=>p.dealer_id===did);$('assignChips').innerHTML=pp.length?pp.map(p=>`<div class="chip ${selectedAssignees.has(p.id)?'selected':''}" onclick="toggleAssignee('${p.id}')">${escapeHtml(p.name)}</div>`).join(''):'<div class="small">No employees in this dealership.</div>'}
 function toggleAssignee(id){selectedAssignees.has(id)?selectedAssignees.delete(id):selectedAssignees.add(id);renderAssignPeople()}
