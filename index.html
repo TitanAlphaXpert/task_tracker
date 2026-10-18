@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#141A22">
 <title>Task Tracker — Daily Task Tracker</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{--bg:#141A22;--surface:#1E2733;--surface2:#262F3D;--border:#37424F;--accent:#FF6B35;--caution:#FFC845;--success:#49B683;--danger:#E76161;--text:#EDEFF2;--muted:#8B97A8;--display:'Oswald',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
@@ -708,9 +710,9 @@ async function createMyDealership(){
 }
 function renderManagerDealerChips(){ $("managerDealerChips").innerHTML=(window.allDealersForManager||[]).map(d=>`<div class="chip ${selectedManagerDealers.has(d.id)?'selected':''}" onclick="toggleManagerDealer('${d.id}')">${escapeHtml(d.name)}</div>`).join("") }
 function toggleManagerDealer(id){selectedManagerDealers.has(id)?selectedManagerDealers.delete(id):selectedManagerDealers.add(id);renderManagerDealerChips()}
-async function addManager(){const name=$('newManagerName').value.trim(),pin=$('newManagerPin').value.trim();if(!name||!/^[0-9]{4,8}$/.test(pin)||!selectedManagerDealers.size)return toast('Enter name, 4–8 digit PIN and at least one dealership');try{await managerCall('manager_create_manager',{p_name:name,p_manager_pin:pin,p_dealer_ids:[...selectedManagerDealers]});toast('Manager added');$('newManagerName').value='';$('newManagerPin').value='';selectedManagerDealers.clear();await renderManagerAdminList();renderManagerDealerChips()}catch(e){toast(e.message||'Could not add manager')}}
+async function addManager(){const name=$('newManagerName').value.trim(),pin=$('newManagerPin').value.trim();if(!name||!/^[0-9]{4,8}$/.test(pin)||!selectedManagerDealers.size)return toast('Enter name, 4–8 digit PIN and at least one dealership');try{await managerCall('manager_create_manager',{p_name:name,p_manager_pin:pin,p_dealer_ids:[...selectedManagerDealers]});clearCache('eicher_tt_managers');toast('Manager added');$('newManagerName').value='';$('newManagerPin').value='';selectedManagerDealers.clear();await renderManagerAdminList();renderManagerDealerChips()}catch(e){toast(e.message||'Could not add manager')}}
 async function renderManagerAdminList(){try{const list=await managerCall('manager_get_managers');$('managerAdminList').innerHTML=list.length?list.map(m=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>${escapeHtml(m.name)}</b><div class="small">${m.is_admin?'Administrator':'Manager'} • ${m.active?'ACTIVE':'INACTIVE'}</div><div class="small">${(m.dealerships||[]).map(escapeHtml).join(' • ')||'No dealerships assigned'}</div></div>${m.id!==currentManager.id?`<button class="btn ${m.active?'btn-danger':'btn-secondary'}" onclick="toggleManagerActive('${m.id}',${!m.active})">${m.active?'Deactivate':'Activate'}</button>`:''}</div></div>`).join(''):'<div class="empty">No managers found.</div>'}catch(e){toast(e.message||'Could not load managers')}}
-async function toggleManagerActive(id,active){try{await managerCall('manager_set_manager_active',{p_target_manager_id:id,p_active:active});toast(active?'Manager activated':'Manager deactivated');await renderManagerAdminList()}catch(e){toast(e.message||'Could not update manager')}}
+async function toggleManagerActive(id,active){try{await managerCall('manager_set_manager_active',{p_target_manager_id:id,p_active:active});clearCache('eicher_tt_managers');toast(active?'Manager activated':'Manager deactivated');await renderManagerAdminList()}catch(e){toast(e.message||'Could not update manager')}}
 
 $("taskDue").value=today();if($("recStart"))$("recStart").value=today();if($("reportDate"))$("reportDate").value=today();if($("recType"))renderRecurrenceSchedule();loadDealers();
 </script>
