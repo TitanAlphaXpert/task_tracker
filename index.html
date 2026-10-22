@@ -10,6 +10,15 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 :root{--bg:#141A22;--surface:#1E2733;--surface2:#262F3D;--border:#37424F;--accent:#FF6B35;--caution:#FFC845;--success:#49B683;--danger:#E76161;--text:#EDEFF2;--muted:#8B97A8;--display:'Oswald',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+body[data-theme="light"]{--bg:#F3F5F7;--surface:#FFFFFF;--surface2:#E9EDF1;--border:#D0D7DE;--text:#202832;--muted:#657180;--accent:#F0642B;--caution:#946200;--success:#168456;--danger:#C93434}
+body[data-theme="light"]{background:radial-gradient(circle at 10% -10%,rgba(240,100,43,.08),transparent 40%),var(--bg)}
+body[data-theme="light"] .odo-digit{background:#FFFFFF;color:#805000}
+body[data-theme="light"] .brand-mark{color:#FFFFFF}
+body[data-theme="light"] .btn-accent{color:#FFFFFF}
+body[data-theme="light"] .tab.active,body[data-theme="light"] .chip.selected,body[data-theme="light"] .day-chip.selected{color:#FFFFFF}
+body[data-theme="light"] .jobcard.done,body[data-theme="light"] .jobcard.late{opacity:1}
+#themeIcon{font-size:18px;line-height:1}
+
 *{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:var(--body);background:radial-gradient(circle at 10% -10%,rgba(255,107,53,.1),transparent 40%),var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
 #app{max-width:520px;margin:auto;min-height:100vh;padding:18px 16px 40px}.hidden{display:none!important}
 .manager-tab-panel[hidden]{display:none!important}
@@ -30,7 +39,10 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 <div id="app">
   <div class="topbar">
     <div class="brand"><div class="brand-text"><h1>Task Tracker</h1><p>Daily task board</p></div></div>
-    <button class="icon-btn" onclick="openManager()" title="Managers" aria-label="Open manager dashboard"><img class="manager-icon" src="manager.png" alt="Managers" onerror="this.style.display='none'"></button>
+    <div style="display:flex;gap:7px;align-items:center">
+      <button id="themeToggle" class="icon-btn" onclick="toggleTheme()" title="Switch to light theme" aria-label="Switch to light theme"><span id="themeIcon" aria-hidden="true">☀</span></button>
+      <button class="icon-btn" onclick="openManager()" title="Managers" aria-label="Open manager dashboard"><img class="manager-icon" src="manager.png" alt="Managers" onerror="this.style.display='none'"></button>
+    </div>
   </div>
 
   <div id="screen-home">
@@ -95,10 +107,10 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="session" id="managerHubSession"></div>
     <div class="section-label">Manager Dashboard</div>
     <div class="small" style="margin-bottom:12px">Manage your profile, dealerships and manager access here. Select a dealership below to open its location dashboard.</div>
+    <div class="subhead">My Active Dealerships</div><div id="managerDealerGrid"></div>
     <div class="manager-card"><div class="section-label">My Manager Profile</div><div class="field"><label>Manager name</label><input id="myManagerName" placeholder="Name"></div><div class="field"><label>New PIN</label><input id="myManagerNewPin" inputmode="numeric" maxlength="8" placeholder="Leave blank to keep current PIN"></div><button class="btn btn-accent btn-wide" onclick="updateMyManagerProfile()">Save Profile</button></div>
     <div class="manager-card"><div class="section-label">Add Dealership</div><div class="field"><label>Dealership name</label><input id="newDealerName" placeholder="Enter dealership name"></div><button class="btn btn-accent btn-wide" onclick="createMyDealership()">Add Dealership</button><div class="small" style="margin-top:8px">The dealership will appear under My Active Dealerships. Open it to manage manpower and tasks.</div></div>
     <div id="adminManagerSection" class="hidden"><div class="manager-card"><div class="section-label">Add New Manager</div><div class="field"><label>Manager name</label><input id="newManagerName" placeholder="Name"></div><div class="field"><label>Manager PIN</label><input id="newManagerPin" inputmode="numeric" maxlength="8" placeholder="4–8 digits"></div><div class="field"><label>Dealerships managed</label><div class="chips" id="managerDealerChips"></div></div><button class="btn btn-accent btn-wide" onclick="addManager()">Add Manager</button></div><div class="subhead">Active / Inactive Managers</div><div id="managerAdminList"></div></div>
-    <div class="subhead">My Active Dealerships</div><div id="managerDealerGrid"></div>
   </div>
 
   <div id="screen-manager" class="hidden">
@@ -157,6 +169,21 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 <div id="toast" class="toast"></div>
 
 <script>
+/* ---------- THEME ---------- */
+function applyTheme(theme){
+  const chosen=theme==="light"?"light":"dark";
+  document.body.dataset.theme=chosen;
+  try{localStorage.setItem("eicher_tt_theme",chosen)}catch(_){}
+  const button=document.getElementById("themeToggle");
+  const icon=document.getElementById("themeIcon");
+  if(button){button.title=chosen==="dark"?"Switch to light theme":"Switch to dark theme";button.setAttribute("aria-label",button.title)}
+  if(icon)icon.textContent=chosen==="dark"?"☀":"☾";
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute("content",chosen==="dark"?"#141A22":"#F3F5F7");
+}
+function toggleTheme(){applyTheme(document.body.dataset.theme==="dark"?"light":"dark")}
+(function initTheme(){let saved="dark";try{saved=localStorage.getItem("eicher_tt_theme")||"dark"}catch(_){}applyTheme(saved)})();
+
 /* ---------- CONFIG ---------- */
 const SUPABASE_URL = "https://rhgnnvmzautqupwbhymq.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0VdfBOsd53Rbwb4EN1Eorw_BEFIVcvI";
