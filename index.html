@@ -57,12 +57,7 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="back-row"><button class="back-btn" onclick="logout()">← Change user</button></div>
     <div class="session" id="employeeSession"></div>
     <div class="odo-wrap"><div style="width:100%"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="odo-label">Completion streak</div><div class="odo-digits" id="odoDigits"></div></div><div style="font-size:26px">🔥</div></div><div id="streakPenaltyMsg" class="small" style="margin-top:10px"></div></div></div>
-    <div class="manager-card" id="freezeCard">
-      <div class="section-label">🧊 Streak Freeze Spills</div>
-      <div class="small" id="freezeStatus" style="margin:6px 0 10px">Loading your monthly freeze balance...</div>
-      <button class="btn btn-secondary btn-wide" id="freezeBtn" onclick="useFreezeSpill()">🧊 Freeze Today</button>
-      <div class="small" style="margin-top:8px">Use up to 3 spills per calendar month. Freezing today protects your streak and shifts every open task's due date by one day.</div>
-    </div>
+    <div class="subhead">Open Tasks</div><div id="todayTasks"></div>
     <div class="manager-card">
       <div class="section-label">Need CSM / Manager Support?</div>
       <div class="small" style="margin:5px 0 10px">Raise a request for guidance, technical support, customer issues, approvals, or other help.</div>
@@ -74,7 +69,12 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
         <button class="btn btn-accent btn-wide" onclick="submitRequest()">Send Request</button>
       </div>
     </div>
-    <div class="subhead">Open Tasks</div><div id="todayTasks"></div>
+    <div class="manager-card" id="freezeCard">
+      <div class="section-label">🧊 Streak Freeze Spills</div>
+      <div class="small" id="freezeStatus" style="margin:6px 0 10px">Loading your monthly freeze balance...</div>
+      <button class="btn btn-secondary btn-wide" id="freezeBtn" onclick="useFreezeSpill()">🧊 Freeze Today</button>
+      <div class="small" style="margin-top:8px">Use up to 3 spills per calendar month. Freezing today protects your streak and shifts every open task's due date by one day.</div>
+    </div>
     <div class="subhead">My Requests</div><div id="myRequests"></div>
     
   </div>
@@ -329,12 +329,13 @@ function renderPerson(){
   renderMyRequests();
 }
 function renderStreak(my){
-  // Use India-local completion dates. Database timestamps are stored in UTC,
-  // so slicing completed_at directly can assign a completion to the wrong day.
+  // Count a completed task against its scheduled due date, not the timestamp
+  // when it was eventually completed. This keeps late tasks attached to their
+  // original workday instead of moving the streak to a later calendar date.
   const doneDates=new Set(
     my
-      .filter(x=>["done","late"].includes(x.status))
-      .map(x=>getISTDateKey(x.completed_at))
+      .filter(x=>["done","late"].includes(x.status) || x.completed_at)
+      .map(x=>x.due_date)
       .filter(Boolean)
   );
 
