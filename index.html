@@ -329,12 +329,13 @@ function renderPerson(){
   renderMyRequests();
 }
 function renderStreak(my){
-  // Count a completed task against its scheduled due date, not the timestamp
-  // when it was eventually completed. This keeps late tasks attached to their
-  // original workday instead of moving the streak to a later calendar date.
+  // Only tasks completed on time count toward the streak for their due date.
+  // A task marked COMPLETED LATE keeps its actual completed_at timestamp for
+  // audit/display, but does not protect the original due date in the streak.
+  // Therefore, a late task on a scheduled working day breaks the streak there.
   const doneDates=new Set(
     my
-      .filter(x=>["done","late"].includes(x.status) || x.completed_at)
+      .filter(x=>String(x.status||"").toLowerCase()==="done")
       .map(x=>x.due_date)
       .filter(Boolean)
   );
