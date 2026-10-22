@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#141A22">
-<title>Task Tracker — Daily Task Tracker</title>
+<title>Task Tracker</title>
 <link rel="icon" type="image/png" href="./icon.png?v=2">
 <link rel="apple-touch-icon" href="./icon.png?v=2">
 <style>
@@ -172,6 +172,22 @@ function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","
 function initials(n){return n.trim().split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
 function istNow(){return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Kolkata"}))}
 function today(){let d=istNow();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function getISTDateKey(timestamp){
+  if(!timestamp)return null;
+  const date=new Date(timestamp);
+  if(Number.isNaN(date.getTime()))return null;
+  const parts=new Intl.DateTimeFormat("en-CA",{
+    timeZone:"Asia/Kolkata",
+    year:"numeric",
+    month:"2-digit",
+    day:"2-digit"
+  }).formatToParts(date);
+  const values={};
+  for(const part of parts){
+    if(part.type!=="literal")values[part.type]=part.value;
+  }
+  return `${values.year}-${values.month}-${values.day}`;
+}
 function fmtDate(s){return s?new Date(s+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}):"-"}
 function fmtTs(s){return s?new Date(s).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"-"}
 function showScreen(id){["screen-home","screen-employee-select","screen-employee-pin","screen-person","screen-manager-list","screen-manager-pin","screen-manager-dealer","screen-manager"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
@@ -313,36 +329,57 @@ function renderPerson(){
   renderMyRequests();
 }
 function renderStreak(my){
-  const doneDates=new Set(my.filter(x=>["done","late"].includes(x.status)).map(x=>x.completed_at?.slice(0,10)).filter(Boolean));
+  // Use India-local completion dates. Database timestamps are stored in UTC,
+  // so slicing completed_at directly can assign a completion to the wrong day.
+  const doneDates=new Set(
+    my
+      .filter(x=>["done","late"].includes(x.status))
+      .map(x=>getISTDateKey(x.completed_at))
+      .filter(Boolean)
+  );
+
+  // A date is considered scheduled only when this employee has a task due on it.
+  // Dates with no task record are skipped rather than breaking the streak.
+  const scheduledDates=new Set(my.map(x=>x.due_date).filter(Boolean));
   let baseStreak=0,d=istNow();
 
   // Streak follows working days only. Sunday is a weekly holiday and is skipped.
-  // On Monday, if today's task is not completed yet, preserve the streak from Saturday
-  // until Monday's working-day activity is completed.
+  // Frozen dates preserve the streak. An incomplete task due today gets the
+  // existing grace period until the end of the day.
   for(let i=0;i<120;i++){
     const iso=d.getDay(); // 0 = Sunday
+    const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
     if(iso===0){
       d.setDate(d.getDate()-1);
       continue;
     }
 
-    const ds=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     if((freezeStatus.frozen_dates||[]).includes(ds)){
       baseStreak++;
       d.setDate(d.getDate()-1);
       continue;
     }
+
     if(doneDates.has(ds)){
       baseStreak++;
       d.setDate(d.getDate()-1);
       continue;
     }
 
-    // If today has not been completed yet, do not break yesterday's streak.
+    // No task was scheduled/due for this date, so it should not break a streak.
+    if(!scheduledDates.has(ds)){
+      d.setDate(d.getDate()-1);
+      continue;
+    }
+
+    // If today's scheduled task is not completed yet, preserve the prior streak.
     if(i===0){
       d.setDate(d.getDate()-1);
       continue;
     }
+
+    // A task was due on this working day but no task was completed that day.
     break;
   }
 
