@@ -329,13 +329,12 @@ function renderPerson(){
   renderMyRequests();
 }
 function renderStreak(my){
-  // Only tasks completed on time count toward the streak for their due date.
-  // A task marked COMPLETED LATE keeps its actual completed_at timestamp for
-  // audit/display, but does not protect the original due date in the streak.
-  // Therefore, a late task on a scheduled working day breaks the streak there.
+  // A task completed late still counts as completed for streak continuity,
+  // but each late task incurs one point of penalty against the streak score.
+  // Keep the real completed_at timestamp unchanged for audit/display.
   const doneDates=new Set(
     my
-      .filter(x=>String(x.status||"").toLowerCase()==="done")
+      .filter(x=>["done","late"].includes(String(x.status||"").toLowerCase()))
       .map(x=>x.due_date)
       .filter(Boolean)
   );
@@ -381,38 +380,49 @@ function renderStreak(my){
       continue;
     }
 
-    // A task was due on this working day but no task was completed that day.
+    // A working day with a due task that is still incomplete breaks continuity.
     break;
   }
 
-  // Penalty: every incomplete task whose due date has passed costs 1 point
-  // for every calendar day it remains overdue. Completed / completed-late tasks
-  // do not carry an overdue penalty.
   const todayIso=today();
   const todayUtc=(()=>{
     const [y,m,day]=todayIso.split("-").map(Number);
     return Date.UTC(y,m-1,day);
   })();
 
-  let penalty=0;
+  // One penalty point for EACH task marked COMPLETED LATE. Do not collapse by
+  // due date: if multiple tasks due on the same day are late, each incurs a point.
+  // Late tasks are excluded from the pending-overdue penalty below, preventing
+  // the same lapse from being charged twice.
+  let latePenalty=0;
   my.forEach(t=>{
-    if(["done","late"].includes(t.status)||t.completed_at)return;
+    if(String(t.status||"").toLowerCase()==="late") latePenalty++;
+  });
+
+  // Existing pending-overdue penalty: one point per calendar day overdue for
+  // each task that remains incomplete. Completed/late tasks are not counted here.
+  let pendingPenalty=0;
+  my.forEach(t=>{
+    const status=String(t.status||"").toLowerCase();
+    if(["done","late"].includes(status)||t.completed_at)return;
     if(!t.due_date||t.due_date>=todayIso)return;
     const [y,m,day]=t.due_date.split("-").map(Number);
     const dueUtc=Date.UTC(y,m-1,day);
     const overdueDays=Math.floor((todayUtc-dueUtc)/86400000);
-    if(overdueDays>0) penalty+=overdueDays;
+    if(overdueDays>0) pendingPenalty+=overdueDays;
   });
 
+  const penalty=latePenalty+pendingPenalty;
   const score=baseStreak-penalty;
   const scoreText=score<0?`-${String(Math.abs(score)).padStart(3,"0")}`:String(score).padStart(3,"0");
   $("odoDigits").innerHTML=scoreText.split("").map(x=>`<div class="odo-digit">${x}</div>`).join("");
 
   const penaltyMsg=$("streakPenaltyMsg");
   if(penaltyMsg){
-    penaltyMsg.innerHTML=penalty>0
-      ? `Penalty deducted: <b>-${penalty} point${penalty===1?"":"s"}</b> for pending due task${penalty===1?"":"s"}.`
-      : "No penalty, no pending overdue tasks.";
+    const parts=[];
+    if(latePenalty>0) parts.push(`<b>-${latePenalty} point${latePenalty===1?"":"s"}</b> for ${latePenalty} task${latePenalty===1?"":"s"} completed late`);
+    if(pendingPenalty>0) parts.push(`<b>-${pendingPenalty} point${pendingPenalty===1?"":"s"}</b> for pending overdue tasks`);
+    penaltyMsg.innerHTML=parts.length?`Penalty deducted: ${parts.join("; ")}.`:"No penalty, no pending overdue tasks.";
     penaltyMsg.style.color=penalty>0?"var(--danger)":"var(--muted)";
   }
 }
