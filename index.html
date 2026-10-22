@@ -410,7 +410,7 @@ function renderStreak(my){
   if(penaltyMsg){
     penaltyMsg.innerHTML=penalty>0
       ? `Penalty deducted: <b>-${penalty} point${penalty===1?"":"s"}</b> for pending due task${penalty===1?"":"s"}.`
-      : "No penalty — no pending overdue tasks.";
+      : "No penalty, no pending overdue tasks.";
     penaltyMsg.style.color=penalty>0?"var(--danger)":"var(--muted)";
   }
 }
