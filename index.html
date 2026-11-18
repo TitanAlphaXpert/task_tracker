@@ -37,6 +37,67 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 .cc-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 18px}.cc-kpi{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px}.cc-kpi b{display:block;font:700 24px var(--display)}.cc-kpi span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}.attention-tile{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--muted);border-radius:12px;padding:12px;margin:9px 0;position:relative}.attention-tile.age-0{padding:10px}.attention-tile.age-3{padding:13px}.attention-tile.age-6{padding:16px}.attention-tile.age-11{padding:19px}.attention-tile.age-16{padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.18)}.attention-tile.priority-low{border-left-color:#7B9AAE}.attention-tile.priority-medium{border-left-color:var(--caution)}.attention-tile.priority-high{border-left-color:#F08A42}.attention-tile.priority-critical{border-left-color:var(--danger);box-shadow:0 0 0 1px rgba(231,97,97,.2)}.attention-tile.status-resolved{opacity:.75;border-left-color:var(--success)}.attention-title{font-weight:700;font-size:14px;line-height:1.35}.attention-meta{font:10px var(--mono);color:var(--muted);margin-top:5px}.attention-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.attention-badge{font:10px var(--mono);padding:4px 6px;border-radius:5px;background:var(--surface2);color:var(--text)}.attention-badge.critical{background:rgba(231,97,97,.16);color:var(--danger)}.attention-description{font-size:12px;line-height:1.5;margin-top:9px;white-space:pre-wrap}.attention-history{border-top:1px solid var(--border);margin-top:10px;padding-top:8px}.attention-history-row{font-size:11px;color:var(--muted);padding:4px 0}.attention-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.attention-actions button{flex:1 1 30%;min-width:90px}.cc-table{width:100%;border-collapse:collapse;font-size:11px}.cc-table th,.cc-table td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}.cc-table th{color:var(--muted);font:10px var(--mono);text-transform:uppercase}.cc-age{font:700 11px var(--mono)}.cc-activity{padding:9px 0;border-bottom:1px solid var(--border);font-size:11px}.cc-activity:last-child{border-bottom:0}.cc-muted{color:var(--muted)}.cc-section-title{font:14px var(--display);text-transform:uppercase;color:var(--muted);margin:16px 0 8px}.cc-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}.cc-form textarea{min-height:78px}.cc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cc-account{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--border)}.cc-account:last-child{border-bottom:0}.cc-account .small{margin:3px 0 0}.cc-actions{display:flex;gap:6px;flex-wrap:wrap}.cc-status-open{color:var(--caution)}.cc-status-acknowledged,.cc-status-in_progress,.cc-status-awaiting_support{color:var(--caution)}.cc-status-resolved{color:var(--success)}
 @media(min-width:700px){#app{max-width:760px}.cc-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.attention-tile{padding:16px}.cc-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+/* Professional interface refinement */
+:root{--bg:#111820;--surface:#1B2632;--surface2:#243240;--border:#344454;--accent:#F36B35;--text:#F2F5F7;--muted:#A0ADBA;--display:'Inter',sans-serif;--body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+body[data-theme="light"]{--bg:#F1F4F6;--surface:#FFFFFF;--surface2:#F5F7F9;--border:#D8E0E7;--text:#1D2935;--muted:#687786;--accent:#D95B2B}
+body{background:var(--bg);font-size:14px;line-height:1.45;letter-spacing:0}
+#app{max-width:560px;padding:20px 18px 48px}
+.topbar{padding:3px 0 14px;border-bottom:1px solid var(--border);margin-bottom:22px}
+.brand-text h1{font-family:var(--body);font-size:17px;font-weight:750;letter-spacing:.15px;text-transform:none}
+.brand-text p{font-size:11px;letter-spacing:.2px;margin-top:2px}
+.icon-btn,.back-btn{border-radius:9px;transition:background .15s,border-color .15s}
+.icon-btn{width:38px;height:38px}
+.section-label{font-family:var(--body);font-size:10px;font-weight:750;letter-spacing:1.15px;color:var(--muted)}
+.subhead,.board-person h3,.cc-section-title{font-family:var(--body);font-size:13px;font-weight:750;letter-spacing:.45px;color:var(--text)}
+.hero-photo{height:205px;border-radius:12px;object-position:center 55%;margin-bottom:22px}
+.home-brand-icon{width:42px;height:42px;margin:0 auto 12px}
+#screen-home>.section-label{margin-bottom:9px}
+#screen-home .field{margin-bottom:12px}
+select,input,textarea{border-radius:8px;border-color:var(--border);padding:12px 13px;font-size:13px;transition:border-color .15s,box-shadow .15s}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(243,107,53,.12)}
+.btn{border-radius:8px;padding:11px 14px;font-size:12px;font-weight:700;letter-spacing:.1px;transition:transform .12s,filter .12s,background .12s}
+.btn:active{transform:translateY(1px)}
+.btn-accent{background:var(--accent);color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.12)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
+.btn-wide{min-height:44px}
+.command-entry{margin-top:22px;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;gap:16px;position:relative;overflow:hidden}
+.command-entry:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.command-entry-copy{padding-left:2px}
+.command-entry-kicker{font:700 9px var(--mono);letter-spacing:1.1px;color:var(--accent)}
+.command-entry h2{font-size:17px;line-height:1.25;margin:7px 0 5px;font-weight:750;letter-spacing:-.25px}
+.command-entry p{font-size:12px;line-height:1.55;color:var(--muted);margin:0;max-width:430px}
+.command-entry-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(243,107,53,.45);border-radius:8px;background:rgba(243,107,53,.09);color:var(--accent);font:700 12px var(--body);cursor:pointer}
+body[data-theme="light"] .command-entry-button{background:rgba(217,91,43,.07)}
+.manager-card,.dealer-select-card,.cc-form,.request-card,.jobcard,.recurring-card,.board-card,.attention-tile{border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,.07)}
+.manager-card{padding:15px;margin-bottom:12px}
+.jobcard{padding:15px;margin-bottom:10px}
+.tabbar{border-radius:9px;padding:4px;gap:3px;background:var(--surface2);position:sticky;top:0;z-index:5;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.tab{font-size:10px;font-weight:700;padding:10px 5px;border-radius:6px}
+.tab.active{background:var(--accent);color:#fff}
+.person-tile,.manager-tile,.dealer-option{border-radius:10px;padding:17px 13px;transition:border-color .15s,background .15s}
+.person-tile:hover,.manager-tile:hover,.dealer-option:hover{border-color:var(--accent)}
+.pin-wrap{gap:13px}
+.pin-input{border-radius:9px;letter-spacing:9px}
+.cc-kpis{gap:9px;margin:12px 0 16px}
+.cc-kpi{border-radius:10px;padding:14px;background:var(--surface);border-color:var(--border)}
+.cc-kpi b{font:750 24px var(--body);letter-spacing:-.6px}
+.cc-kpi span{font:700 9px var(--body);letter-spacing:.65px;line-height:1.4}
+.attention-tile{padding:14px;margin:10px 0}
+.attention-title{font-size:13px}
+.attention-meta{font-size:10px;line-height:1.5}
+.attention-badge{font-size:9px;font-weight:700;letter-spacing:.2px}
+.cc-section-title{margin:18px 0 9px}
+.cc-table{font-size:11px}
+.cc-table th{font-size:9px;letter-spacing:.45px}
+.cc-table th,.cc-table td{padding:9px 7px}
+.leader-summary-heading{font-size:12px;font-weight:750;margin-bottom:10px}
+.empty{border-radius:10px;background:var(--surface);border:1px dashed var(--border);line-height:1.5}
+.session{font-size:11px;line-height:1.5;margin:0 0 15px}
+.toast{border-radius:8px;box-shadow:0 5px 20px rgba(0,0,0,.2)}
+@media(min-width:700px){#app{max-width:860px;padding:24px 28px 56px}.hero-photo{height:270px}.command-entry{flex-direction:row;align-items:center;justify-content:space-between;padding:21px 23px}.command-entry-copy{max-width:65%}.command-entry-button{width:auto;min-width:205px}.tabbar{position:static}.cc-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:380px){#app{padding-left:13px;padding-right:13px}.hero-photo{height:165px}.command-entry{padding:15px}.command-entry h2{font-size:16px}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -56,7 +117,14 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <div class="section-label">Select dealership</div>
     <div class="field"><select id="dealerSelect"><option value="">Loading...</option></select></div>
     <button class="btn btn-accent btn-wide" onclick="continueToEmployees()">Employee Task Tracker</button>
-    <div class="btn-row" style="margin-top:10px"><button class="btn btn-secondary" style="flex:1" onclick="openManager()">CSM / System Manager</button><button class="btn btn-secondary" style="flex:1" onclick="openLeaderPortal()">Dealership Command Centre</button></div>
+    <section class="command-entry" aria-label="Dealership leadership access">
+      <div class="command-entry-copy">
+        <span class="command-entry-kicker">DEALERSHIP LEADERSHIP</span>
+        <h2>Dealership Command Centre</h2>
+        <p>Review operational concerns, monitor team task progress and coordinate action with your CSM.</p>
+      </div>
+      <button class="command-entry-button" onclick="openLeaderPortal()" aria-label="Open Dealership Command Centre"><span>Open Command Centre</span><span aria-hidden="true">→</span></button>
+    </section>
   </div>
 
   <div id="screen-leader-login" class="hidden">
@@ -824,9 +892,7 @@ function renderLeaderDashboard(){
   $("leaderAttentionBoard").innerHTML=(sorted.length?sorted.map(x=>attentionTile(x,upd,"leader")).join(""):'<div class="empty">No active dealership concerns. New observations raised by the CSM will appear here.</div>')+`<details class="manager-card"><summary class="section-label" style="cursor:pointer">Resolved history (${resolvedItems.length})</summary>${resolvedItems.map(x=>attentionTile(x,upd,"leader")).join("")||'<div class="small">No resolved concerns yet.</div>'}</details>`;
   const people=d.people||[],tasks=d.tasks||[],pending=tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at),overdue=pending.filter(t=>t.due_date<today());
   const byPerson=people.map(p=>{const mine=pending.filter(t=>t.assigned_to===p.id);return {name:p.name,pending:mine.length,overdue:mine.filter(t=>t.due_date<today()).length,oldest:mine.reduce((n,t)=>Math.max(n,ageDays(t.assigned_at||t.created_at)),0)}}).filter(x=>x.pending).sort((a,b)=>b.overdue-a.overdue||b.pending-a.pending);
-  const taskRows=tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at).sort((a,b)=>a.due_date.localeCompare(b.due_date));
-  const allTaskRows=[...tasks].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  $("leaderTaskOverview").innerHTML=`<div class="cc-kpis"><div class="cc-kpi"><b>${pending.length}</b><span>Pending tasks</span></div><div class="cc-kpi"><b>${overdue.length}</b><span>Overdue tasks</span></div></div>${byPerson.length?`<div class="manager-card"><b>Employee-wise pending</b><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Employee</th><th>Pending</th><th>Overdue</th><th>Oldest age</th></tr></thead><tbody>${byPerson.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.pending}</td><td>${x.overdue}</td><td>${x.oldest}d</td></tr>`).join("")}</tbody></table></div></div>`:""}${taskRows.length?`<div class="manager-card"><b>Open task register</b><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Task</th><th>Employee</th><th>Due</th><th>Status</th></tr></thead><tbody>${taskRows.map(t=>`<tr><td>${escapeHtml(t.title)}</td><td>${escapeHtml(t.employee_name||"-")}</td><td>${fmtDate(t.due_date)}</td><td>${escapeHtml(t.status.toUpperCase())}${t.due_date<today()?'<br><span class="danger-text">OVERDUE</span>':''}</td></tr>`).join("")}</tbody></table></div></div>`:'<div class="empty">No open employee tasks.</div>'}<details class="manager-card"><summary class="section-label" style="cursor:pointer">Full task register / history (${allTaskRows.length})</summary><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Task</th><th>Employee</th><th>Due</th><th>Status</th><th>Completed</th></tr></thead><tbody>${allTaskRows.map(t=>`<tr><td>${escapeHtml(t.title)}</td><td>${escapeHtml(t.employee_name||"-")}</td><td>${fmtDate(t.due_date)}</td><td>${escapeHtml(String(t.status||'').toUpperCase())}</td><td>${fmtTs(t.completed_at)}</td></tr>`).join("")}</tbody></table></div></details>`;
+  $("leaderTaskOverview").innerHTML=`<div class="cc-kpis"><div class="cc-kpi"><b>${pending.length}</b><span>Pending tasks</span></div><div class="cc-kpi"><b>${overdue.length}</b><span>Overdue tasks</span></div></div>${byPerson.length?`<div class="manager-card"><div class="leader-summary-heading">Employee-wise pending</div><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Employee</th><th>Pending</th><th>Overdue</th><th>Oldest age</th></tr></thead><tbody>${byPerson.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.pending}</td><td>${x.overdue}</td><td>${x.oldest}d</td></tr>`).join("")}</tbody></table></div></div>`:'<div class="empty">No pending employee tasks.</div>'}`;
   const activity=d.leadership_activity||[];
   $("leaderActivity").innerHTML=activity.length?activity.map(a=>`<div class="cc-activity"><b>${escapeHtml(a.name)}</b> • ${escapeHtml(a.role.toUpperCase())}<div class="cc-muted">${a.viewed_today?"Viewed today":"Not viewed today"} • Last view: ${fmtTs(a.last_view)} • Last login: ${fmtTs(a.last_login)}</div></div>`).join(""):'<div class="empty">No leadership activity recorded yet.</div>';
 }
