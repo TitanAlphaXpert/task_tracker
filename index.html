@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#141A22">
-<title>Task Tracker</title>
+<title>Eicher SCV Task Tracker & Dealership Command Centre</title>
 <link rel="icon" type="image/png" href="./icon.png?v=2">
 <link rel="apple-touch-icon" href="./icon.png?v=2">
 <style>
@@ -32,6 +32,11 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
 @media(max-width:360px){.person-grid{grid-template-columns:1fr}.tab{font-size:10px}}
 
 .report-toolbar{display:flex;gap:8px;margin-bottom:12px}.report-toolbar>*{flex:1}.report-note{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:11px;color:var(--muted);margin-bottom:12px}.report-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.report-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px}.report-kpi b{display:block;font-size:20px}.report-kpi span{font-size:10px;color:var(--muted)}.report-table{width:100%;border-collapse:collapse;font-size:11px}.report-table th,.report-table td{border-bottom:1px solid var(--border);padding:7px 5px;text-align:left;vertical-align:top}.report-table th{font:10px var(--mono);color:var(--muted);text-transform:uppercase}.report-section{margin-top:16px}.report-section .subhead{margin-top:0}.report-empty{padding:10px 0;color:var(--muted);font-size:12px}
+
+/* Dealership Command Centre and Dealer Attention Board */
+.cc-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 18px}.cc-kpi{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px}.cc-kpi b{display:block;font:700 24px var(--display)}.cc-kpi span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}.attention-tile{background:var(--surface);border:1px solid var(--border);border-left:5px solid var(--muted);border-radius:12px;padding:12px;margin:9px 0;position:relative}.attention-tile.age-0{padding:10px}.attention-tile.age-3{padding:13px}.attention-tile.age-6{padding:16px}.attention-tile.age-11{padding:19px}.attention-tile.age-16{padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.18)}.attention-tile.priority-low{border-left-color:#7B9AAE}.attention-tile.priority-medium{border-left-color:var(--caution)}.attention-tile.priority-high{border-left-color:#F08A42}.attention-tile.priority-critical{border-left-color:var(--danger);box-shadow:0 0 0 1px rgba(231,97,97,.2)}.attention-tile.status-resolved{opacity:.75;border-left-color:var(--success)}.attention-title{font-weight:700;font-size:14px;line-height:1.35}.attention-meta{font:10px var(--mono);color:var(--muted);margin-top:5px}.attention-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.attention-badge{font:10px var(--mono);padding:4px 6px;border-radius:5px;background:var(--surface2);color:var(--text)}.attention-badge.critical{background:rgba(231,97,97,.16);color:var(--danger)}.attention-description{font-size:12px;line-height:1.5;margin-top:9px;white-space:pre-wrap}.attention-history{border-top:1px solid var(--border);margin-top:10px;padding-top:8px}.attention-history-row{font-size:11px;color:var(--muted);padding:4px 0}.attention-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.attention-actions button{flex:1 1 30%;min-width:90px}.cc-table{width:100%;border-collapse:collapse;font-size:11px}.cc-table th,.cc-table td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}.cc-table th{color:var(--muted);font:10px var(--mono);text-transform:uppercase}.cc-age{font:700 11px var(--mono)}.cc-activity{padding:9px 0;border-bottom:1px solid var(--border);font-size:11px}.cc-activity:last-child{border-bottom:0}.cc-muted{color:var(--muted)}.cc-section-title{font:14px var(--display);text-transform:uppercase;color:var(--muted);margin:16px 0 8px}.cc-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}.cc-form textarea{min-height:78px}.cc-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cc-account{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--border)}.cc-account:last-child{border-bottom:0}.cc-account .small{margin:3px 0 0}.cc-actions{display:flex;gap:6px;flex-wrap:wrap}.cc-status-open{color:var(--caution)}.cc-status-acknowledged,.cc-status-in_progress,.cc-status-awaiting_support{color:var(--caution)}.cc-status-resolved{color:var(--success)}
+@media(min-width:700px){#app{max-width:760px}.cc-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.attention-tile{padding:16px}.cc-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -50,7 +55,25 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
     <img class="hero-photo" src="eicher-vehicle.jpg" alt="Eicher commercial vehicle" onerror="this.style.display='none'">
     <div class="section-label">Select dealership</div>
     <div class="field"><select id="dealerSelect"><option value="">Loading...</option></select></div>
-    <button class="btn btn-accent btn-wide" onclick="continueToEmployees()">Continue</button>
+    <button class="btn btn-accent btn-wide" onclick="continueToEmployees()">Employee Task Tracker</button>
+    <div class="btn-row" style="margin-top:10px"><button class="btn btn-secondary" style="flex:1" onclick="openManager()">CSM / System Manager</button><button class="btn btn-secondary" style="flex:1" onclick="openLeaderPortal()">Dealership Command Centre</button></div>
+  </div>
+
+  <div id="screen-leader-login" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="goHome()">← Back</button></div>
+    <div class="section-label">Dealership Command Centre</div>
+    <div class="manager-card"><div class="field"><label>Select dealership</label><select id="leaderDealerSelect" onchange="loadLeaderAccounts()"><option value="">Select dealership</option></select></div><div class="section-label">Select your account</div><div id="leaderAccountGrid" class="manager-list"><div class="empty">Select a dealership first.</div></div></div>
+    <div id="leaderPinPanel" class="pin-wrap hidden" style="margin-top:18px"><div class="section-label">Owner / Manager PIN</div><div id="leaderLoginLabel" style="font-weight:600"></div><input id="leaderPin" class="pin-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••••"><button class="btn btn-accent" style="width:180px" onclick="leaderLogin()">Enter</button></div>
+  </div>
+
+  <div id="screen-leader-dashboard" class="hidden">
+    <div class="back-row"><button class="back-btn" onclick="leaderLogout()">← Exit Command Centre</button></div>
+    <div class="section-label">Dealership Command Centre</div><div class="session" id="leaderSession"></div>
+    <div id="leaderKpis" class="cc-kpis"></div>
+    <div class="subhead">Dealer Attention Board</div><div id="leaderAttentionBoard"></div>
+    <div class="subhead">Employee Task Overview</div><div id="leaderTaskOverview"></div>
+    <div class="subhead">Leadership Activity</div><div id="leaderActivity"></div>
+    <div class="small" style="margin-top:14px">This is a monitoring and coordination view. Employees remain responsible for completing their own assigned tasks.</div>
   </div>
 
   <div id="screen-employee-select" class="hidden">
@@ -116,8 +139,9 @@ select,input,textarea{width:100%;background:var(--surface);border:1px solid var(
   <div id="screen-manager" class="hidden">
     <div class="back-row"><button class="back-btn" onclick="selectManagerDealershipScreen()">← Change dealership</button><button class="back-btn" style="float:right" onclick="goHome()">Exit</button></div>
     <div class="session" id="managerSession"></div>
-    <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="requests" onclick="switchTab('requests')">Requests</div><div class="tab" data-tab="recurring" onclick="switchTab('recurring')">Recurring Tasks</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div><div class="tab" data-tab="reports" onclick="switchTab('reports')">Reports</div></div>
+    <div class="tabbar"><div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</div><div class="tab" data-tab="attention" onclick="switchTab('attention')">Attention</div><div class="tab" data-tab="assign" onclick="switchTab('assign')">Assign</div><div class="tab" data-tab="board" onclick="switchTab('board')">Board</div><div class="tab" data-tab="requests" onclick="switchTab('requests')">Requests</div><div class="tab" data-tab="recurring" onclick="switchTab('recurring')">Recurring Tasks</div><div class="tab" data-tab="team" onclick="switchTab('team')">Team</div><div class="tab" data-tab="reports" onclick="switchTab('reports')">Reports</div></div>
     <div id="tab-dashboard" class="manager-tab-panel"></div>
+    <div id="tab-attention" class="manager-tab-panel hidden" hidden></div>
     <div id="tab-assign" class="manager-tab-panel hidden" hidden>
       <div class="field"><label>Task title</label><textarea id="taskTitle" rows="2" placeholder="e.g. Follow up on Pro X customer complaint"></textarea></div>
       <div class="field"><label>Due date</label><input id="taskDue" type="date"></div>
@@ -205,7 +229,7 @@ function getISTDateKey(timestamp){
 }
 function fmtDate(s){return s?new Date(s+"T00:00:00").toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}):"-"}
 function fmtTs(s){return s?new Date(s).toLocaleString("en-IN",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"-"}
-function showScreen(id){["screen-home","screen-employee-select","screen-employee-pin","screen-person","screen-manager-list","screen-manager-pin","screen-manager-dealer","screen-manager"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
+function showScreen(id){["screen-home","screen-employee-select","screen-employee-pin","screen-person","screen-manager-list","screen-manager-pin","screen-manager-dealer","screen-manager","screen-leader-login","screen-leader-dashboard"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
 function goHome(){currentPerson=null;currentManager=null;currentManagerDealerId=null;managerUnlocked=false;showScreen("screen-home");loadDealers()}
 function logout(){currentPerson=null;showScreen("screen-home");loadDealers()}
 
@@ -594,7 +618,7 @@ function populateDealerContext(){
 }
 function currentDealerData(){return {dealer:dealers.find(d=>d.id===currentManagerDealerId),people:people.filter(p=>p.dealer_id===currentManagerDealerId),tasks:tasks.filter(t=>t.dealer_id===currentManagerDealerId),requests:requests.filter(r=>r.dealer_id===currentManagerDealerId)}}
 function switchTab(name){
-  const tabs=['dashboard','assign','board','requests','recurring','team','reports'];
+  const tabs=['dashboard','attention','assign','board','requests','recurring','team','reports'];
   if(!tabs.includes(name)) name='dashboard';
   document.querySelectorAll('#screen-manager .tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
   // Hard-enforce one visible manager panel at a time. This prevents recurring-task
@@ -608,6 +632,7 @@ function switchTab(name){
     el.style.display=visible?'':'none';
   });
   if(name==='dashboard')renderDashboard();
+  if(name==='attention')renderAttentionManager();
   if(name==='assign')renderAssignPeople();
   if(name==='board')renderBoard();
   if(name==='requests')renderRequests();
@@ -738,6 +763,103 @@ function toggleManagerDealer(id){selectedManagerDealers.has(id)?selectedManagerD
 async function addManager(){const name=$('newManagerName').value.trim(),pin=$('newManagerPin').value.trim();if(!name||!/^[0-9]{4,8}$/.test(pin)||!selectedManagerDealers.size)return toast('Enter name, 4–8 digit PIN and at least one dealership');try{await managerCall('manager_create_manager',{p_name:name,p_manager_pin:pin,p_dealer_ids:[...selectedManagerDealers]});clearCache('eicher_tt_managers');toast('Manager added');$('newManagerName').value='';$('newManagerPin').value='';selectedManagerDealers.clear();await renderManagerAdminList();renderManagerDealerChips()}catch(e){toast(e.message||'Could not add manager')}}
 async function renderManagerAdminList(){try{const list=await managerCall('manager_get_managers');$('managerAdminList').innerHTML=list.length?list.map(m=>`<div class="manager-card"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><b>${escapeHtml(m.name)}</b><div class="small">${m.is_admin?'Administrator':'Manager'} • ${m.active?'ACTIVE':'INACTIVE'}</div><div class="small">${(m.dealerships||[]).map(escapeHtml).join(' • ')||'No dealerships assigned'}</div></div>${m.id!==currentManager.id?`<button class="btn ${m.active?'btn-danger':'btn-secondary'}" onclick="toggleManagerActive('${m.id}',${!m.active})">${m.active?'Deactivate':'Activate'}</button>`:''}</div></div>`).join(''):'<div class="empty">No managers found.</div>'}catch(e){toast(e.message||'Could not load managers')}}
 async function toggleManagerActive(id,active){try{await managerCall('manager_set_manager_active',{p_target_manager_id:id,p_active:active});clearCache('eicher_tt_managers');toast(active?'Manager activated':'Manager deactivated');await renderManagerAdminList()}catch(e){toast(e.message||'Could not update manager')}}
+
+
+/* ================================================================
+   DEALERSHIP COMMAND CENTRE + DEALER ATTENTION BOARD
+   Separate PIN-authenticated leadership identities. No task-completion
+   endpoints are exposed in the leadership portal.
+   ================================================================ */
+let leaderAccounts=[], currentLeader=null, currentLeaderPin="", leaderDashboard=null;
+const ATTENTION_STATUSES={open:"OPEN",acknowledged:"ACKNOWLEDGED",in_progress:"ACTION IN PROGRESS",awaiting_support:"AWAITING SUPPORT",resolved:"RESOLVED"};
+const ATTENTION_PRIORITIES=["low","medium","high","critical"];
+function ageDays(ts){if(!ts)return 0;return Math.max(0,Math.floor((Date.now()-new Date(ts).getTime())/86400000))}
+function ageClass(days){return days>=16?"age-16":days>=11?"age-11":days>=6?"age-6":days>=3?"age-3":"age-0"}
+function ageLabel(days){return days>=16?"16+ DAYS • PROLONGED PENDING":days>=11?"11–15 DAYS • SERIOUS DELAY":days>=6?"6–10 DAYS • DELAYED":days>=3?"3–5 DAYS • ATTENTION":"0–2 DAYS • FRESH"}
+function attentionTile(item,updates=[],mode="leader"){
+  const age=ageDays(item.created_at), status=String(item.status||"open").toLowerCase(), priority=String(item.priority||"medium").toLowerCase();
+  const hist=updates.filter(u=>u.attention_id===item.id).slice(0,5);
+  const actions=mode==="leader"&&status!=="resolved"?`<div class="attention-actions"><button class="btn btn-secondary" onclick="leaderAttentionAction('${item.id}','acknowledge')">Acknowledge</button><button class="btn btn-secondary" onclick="leaderAttentionAction('${item.id}','progress')">Action started</button><button class="btn btn-help" onclick="leaderAttentionAction('${item.id}','request_support')">Request CSM support</button><button class="btn btn-secondary" onclick="leaderAttentionAction('${item.id}','comment')">Add update</button><button class="btn btn-secondary" onclick="leaderAttentionAction('${item.id}','clarification')">Ask clarification</button><button class="btn btn-done" onclick="leaderAttentionAction('${item.id}','resolve')">Mark resolved</button></div>`:"";
+  const csmActions=mode==="csm"?`<div class="attention-actions"><button class="btn btn-secondary" onclick="csmAttentionEdit('${item.id}')">Edit / Update</button>${status==='resolved'?`<button class="btn btn-secondary" onclick="csmAttentionReopen('${item.id}')">Reopen</button>`:""}</div>`:"";
+  return `<article class="attention-tile ${ageClass(age)} priority-${escapeHtml(priority)} ${status==='resolved'?'status-resolved':''}"><div class="attention-title">${escapeHtml(item.title||"Untitled concern")}</div><div class="attention-meta">${escapeHtml(item.category||"General")} • Raised ${fmtTs(item.created_at)} • ${age} day${age===1?"":"s"} open</div><div class="attention-badges"><span class="attention-badge ${priority==='critical'?'critical':''}">${escapeHtml(priority.toUpperCase())} PRIORITY</span><span class="attention-badge cc-status-${status}">${escapeHtml(ATTENTION_STATUSES[status]||status.toUpperCase())}</span><span class="attention-badge">${ageLabel(age)}</span></div><div class="attention-description">${escapeHtml(item.description||"")}</div>${item.evidence_url?`<div class="small"><a href="${escapeHtml(item.evidence_url)}" target="_blank" rel="noopener noreferrer">Open evidence ↗</a></div>`:""}${hist.length?`<div class="attention-history"><b class="small">Recent updates</b>${hist.map(u=>`<div class="attention-history-row"><b>${escapeHtml(u.actor_name||u.actor_type||"User")}</b> • ${escapeHtml(u.action||"update")} • ${fmtTs(u.created_at)}${u.note?`<br>${escapeHtml(u.note)}`:""}</div>`).join("")}</div>`:""}${actions}${csmActions}</article>`;
+}
+async function openLeaderPortal(){
+  try{
+    if(!sb)throw new Error("Supabase is not configured");
+    const ds=await rpc("public_get_dealers");
+    $("leaderDealerSelect").innerHTML='<option value="">Select dealership</option>'+ds.map(d=>`<option value="${d.id}">${escapeHtml(d.name)}</option>`).join("");
+    leaderAccounts=[];currentLeader=null;currentLeaderPin="";$("leaderAccountGrid").innerHTML='<div class="empty">Select a dealership first.</div>';
+    $("leaderPinPanel").classList.add("hidden");showScreen("screen-leader-login");
+  }catch(e){toast(e.message||"Could not open Command Centre")}
+}
+async function loadLeaderAccounts(){
+  const dealerId=$("leaderDealerSelect").value;$("leaderPinPanel").classList.add("hidden");
+  if(!dealerId){$("leaderAccountGrid").innerHTML='<div class="empty">Select a dealership first.</div>';return}
+  try{
+    leaderAccounts=await rpc("public_get_dealer_leaders",{p_dealer_id:dealerId});
+    $("leaderAccountGrid").innerHTML=leaderAccounts.length?leaderAccounts.map(a=>`<div class="manager-tile" onclick="selectLeaderAccount('${a.id}')"><div class="person-avatar">${initials(a.name)}</div><div class="person-name">${escapeHtml(a.name)}</div><div class="manager-role">${escapeHtml(a.role.toUpperCase())}</div></div>`).join(""):'<div class="empty" style="grid-column:1/-1">No active dealership leadership accounts are configured. Contact your CSM.</div>';
+  }catch(e){toast(e.message||"Could not load dealership accounts")}
+}
+function selectLeaderAccount(id){currentLeader=leaderAccounts.find(x=>x.id===id);if(!currentLeader)return;$("leaderLoginLabel").textContent=`${currentLeader.name} • ${currentLeader.role.toUpperCase()}`;$("leaderPin").value="";$("leaderPinPanel").classList.remove("hidden");setTimeout(()=>$('leaderPin').focus(),80)}
+async function leaderLogin(){
+  if(!currentLeader)return toast("Select your account first");const pin=$("leaderPin").value.trim();if(!/^[0-9]{4,8}$/.test(pin))return toast("Enter a valid 4–8 digit PIN");
+  try{
+    const profile=await rpc("dealer_leader_verify",{p_leader_id:currentLeader.id,p_pin:pin});
+    if(!profile?.ok)throw new Error("Incorrect PIN or inactive account");
+    currentLeader={...currentLeader,...profile.leader};currentLeaderPin=pin;
+    await loadLeaderDashboard();showScreen("screen-leader-dashboard");
+  }catch(e){toast(e.message||"Leadership login failed")}
+}
+async function loadLeaderDashboard(){
+  if(!currentLeader||!currentLeaderPin)throw new Error("Leadership session expired");
+  leaderDashboard=await rpc("dealer_leader_get_dashboard",{p_leader_id:currentLeader.id,p_pin:currentLeaderPin});
+  renderLeaderDashboard();
+}
+function renderLeaderDashboard(){
+  const d=leaderDashboard||{},items=d.attention||[],active=items.filter(x=>x.status!=="resolved"),critical=active.filter(x=>x.priority==="critical"),awaitDealer=active.filter(x=>["open","acknowledged"].includes(x.status)),awaitCsm=active.filter(x=>x.status==="awaiting_support");
+  $("leaderSession").textContent=`${d.leader?.name||currentLeader.name} • ${(d.leader?.role||currentLeader.role).toUpperCase()} • ${d.dealer?.name||"Dealership"}`;
+  $("leaderKpis").innerHTML=[[active.length,"Active concerns"],[critical.length,"Critical attention"],[awaitDealer.length,"Awaiting dealership action"],[awaitCsm.length,"Awaiting CSM support"]].map(x=>`<div class="cc-kpi"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+  const upd=d.updates||[];const sorted=[...active].sort((a,b)=>{const pa=a.priority==='critical'?4:a.priority==='high'?3:a.priority==='medium'?2:1,pb=b.priority==='critical'?4:b.priority==='high'?3:b.priority==='medium'?2:1;return pb-pa||new Date(a.created_at)-new Date(b.created_at)});
+  const resolvedItems=items.filter(x=>x.status==='resolved').sort((a,b)=>new Date(b.resolved_at)-new Date(a.resolved_at));
+  $("leaderAttentionBoard").innerHTML=(sorted.length?sorted.map(x=>attentionTile(x,upd,"leader")).join(""):'<div class="empty">No active dealership concerns. New observations raised by the CSM will appear here.</div>')+`<details class="manager-card"><summary class="section-label" style="cursor:pointer">Resolved history (${resolvedItems.length})</summary>${resolvedItems.map(x=>attentionTile(x,upd,"leader")).join("")||'<div class="small">No resolved concerns yet.</div>'}</details>`;
+  const people=d.people||[],tasks=d.tasks||[],pending=tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at),overdue=pending.filter(t=>t.due_date<today());
+  const byPerson=people.map(p=>{const mine=pending.filter(t=>t.assigned_to===p.id);return {name:p.name,pending:mine.length,overdue:mine.filter(t=>t.due_date<today()).length,oldest:mine.reduce((n,t)=>Math.max(n,ageDays(t.assigned_at||t.created_at)),0)}}).filter(x=>x.pending).sort((a,b)=>b.overdue-a.overdue||b.pending-a.pending);
+  const taskRows=tasks.filter(t=>!['done','late'].includes(t.status)&&!t.completed_at).sort((a,b)=>a.due_date.localeCompare(b.due_date));
+  const allTaskRows=[...tasks].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  $("leaderTaskOverview").innerHTML=`<div class="cc-kpis"><div class="cc-kpi"><b>${pending.length}</b><span>Pending tasks</span></div><div class="cc-kpi"><b>${overdue.length}</b><span>Overdue tasks</span></div></div>${byPerson.length?`<div class="manager-card"><b>Employee-wise pending</b><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Employee</th><th>Pending</th><th>Overdue</th><th>Oldest age</th></tr></thead><tbody>${byPerson.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.pending}</td><td>${x.overdue}</td><td>${x.oldest}d</td></tr>`).join("")}</tbody></table></div></div>`:""}${taskRows.length?`<div class="manager-card"><b>Open task register</b><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Task</th><th>Employee</th><th>Due</th><th>Status</th></tr></thead><tbody>${taskRows.map(t=>`<tr><td>${escapeHtml(t.title)}</td><td>${escapeHtml(t.employee_name||"-")}</td><td>${fmtDate(t.due_date)}</td><td>${escapeHtml(t.status.toUpperCase())}${t.due_date<today()?'<br><span class="danger-text">OVERDUE</span>':''}</td></tr>`).join("")}</tbody></table></div></div>`:'<div class="empty">No open employee tasks.</div>'}<details class="manager-card"><summary class="section-label" style="cursor:pointer">Full task register / history (${allTaskRows.length})</summary><div style="overflow:auto"><table class="cc-table"><thead><tr><th>Task</th><th>Employee</th><th>Due</th><th>Status</th><th>Completed</th></tr></thead><tbody>${allTaskRows.map(t=>`<tr><td>${escapeHtml(t.title)}</td><td>${escapeHtml(t.employee_name||"-")}</td><td>${fmtDate(t.due_date)}</td><td>${escapeHtml(String(t.status||'').toUpperCase())}</td><td>${fmtTs(t.completed_at)}</td></tr>`).join("")}</tbody></table></div></details>`;
+  const activity=d.leadership_activity||[];
+  $("leaderActivity").innerHTML=activity.length?activity.map(a=>`<div class="cc-activity"><b>${escapeHtml(a.name)}</b> • ${escapeHtml(a.role.toUpperCase())}<div class="cc-muted">${a.viewed_today?"Viewed today":"Not viewed today"} • Last view: ${fmtTs(a.last_view)} • Last login: ${fmtTs(a.last_login)}</div></div>`).join(""):'<div class="empty">No leadership activity recorded yet.</div>';
+}
+async function leaderAttentionAction(id,action){
+  let note="";if(action==="comment"||action==="clarification"||action==="request_support") {note=prompt(action==="request_support"?"Describe the support required from CSM:":action==="clarification"?"What clarification is required from CSM?":"Enter your progress update:")||"";if(!note.trim())return toast("A note is required")}
+  else if(action==="resolve"){note=prompt("Briefly describe the resolution:")||"";if(!note.trim())return toast("Resolution note is required");if(!confirm("Mark this concern as resolved?"))return}
+  try{await rpc("dealer_leader_attention_action",{p_leader_id:currentLeader.id,p_pin:currentLeaderPin,p_attention_id:id,p_action:action,p_note:note.trim()||null});toast("Attention board updated");await loadLeaderDashboard()}catch(e){toast(e.message||"Could not update concern")}
+}
+function leaderLogout(){currentLeader=null;currentLeaderPin="";leaderDashboard=null;showScreen("screen-home");loadDealers()}
+
+/* CSM-side attention board and dealership leadership account administration */
+let csmAttentionData=null;
+async function renderAttentionManager(){
+  const el=$("tab-attention");if(!el||!managerUnlocked||!currentManager||!currentManagerDealerId){if(el)el.innerHTML='<div class="empty">Open a dealership to manage its attention board.</div>';return}
+  el.innerHTML='<div class="empty">Loading Dealer Attention Board...</div>';
+  try{csmAttentionData=await managerCall("manager_attention_get",{p_dealer_id:currentManagerDealerId});renderAttentionManagerContent()}catch(e){el.innerHTML=`<div class="empty">Attention Board migration may not be installed.<br><span class="small">${escapeHtml(e.message||e)}</span></div>`}
+}
+function renderAttentionManagerContent(){
+  const d=csmAttentionData||{},items=d.items||[],active=items.filter(x=>x.status!=="resolved"),leaders=d.leaders||[],updates=d.updates||[];
+  $("tab-attention").innerHTML=`<div class="cc-kpis"><div class="cc-kpi"><b>${active.length}</b><span>Active concerns</span></div><div class="cc-kpi"><b>${active.filter(x=>x.priority==='critical').length}</b><span>Critical</span></div><div class="cc-kpi"><b>${active.filter(x=>x.status==='awaiting_support').length}</b><span>Awaiting CSM support</span></div><div class="cc-kpi"><b>${items.filter(x=>x.status==='resolved'&&getISTDateKey(x.resolved_at)===today()).length}</b><span>Resolved today</span></div></div>
+  <div class="cc-form"><div class="section-label">Raise dealership observation</div><div class="field"><label>Title</label><input id="ccNewTitle" maxlength="160" placeholder="e.g. Pro X EV charger not operational"></div><div class="cc-form-grid"><div class="field"><label>Category</label><select id="ccNewCategory"><option>Equipment</option><option>EV Charging</option><option>Manpower</option><option>Customer / Technical</option><option>Warranty</option><option>Parts / Logistics</option><option>EOS / Digital</option><option>Facility / Infrastructure</option><option>Other</option></select></div><div class="field"><label>Priority</label><select id="ccNewPriority"><option value="medium">Medium</option><option value="low">Low</option><option value="high">High</option><option value="critical">Critical</option></select></div></div><div class="field"><label>Description / required action</label><textarea id="ccNewDescription" maxlength="3000" placeholder="Describe the observation, impact and expected action..."></textarea></div><div class="field"><label>Evidence URL (optional)</label><input id="ccNewEvidence" type="url" placeholder="https://..."></div><button class="btn btn-accent btn-wide" onclick="createAttentionItem()">Publish to Dealer Attention Board</button></div>
+  <div class="cc-section-title">Active Attention Board</div>${active.length?[...active].sort((a,b)=>{const p={critical:4,high:3,medium:2,low:1};return (p[b.priority]||0)-(p[a.priority]||0)||new Date(a.created_at)-new Date(b.created_at)}).map(x=>attentionTile(x,updates,"csm")).join(""):'<div class="empty">No active dealership concerns.</div>'}
+  <details class="manager-card"><summary class="section-label" style="cursor:pointer">Resolved history (${items.filter(x=>x.status==='resolved').length})</summary>${items.filter(x=>x.status==='resolved').sort((a,b)=>new Date(b.resolved_at)-new Date(a.resolved_at)).map(x=>attentionTile(x,updates,"csm")).join("")||'<div class="small">No resolved concerns yet.</div>'}</details>
+  <div class="cc-form"><div class="section-label">Dealership Owner / Manager Accounts</div><div class="small" style="margin-bottom:10px">One active Owner per dealership; multiple Managers are allowed. PINs are stored only as SHA-256 hashes.</div><input type="hidden" id="ccLeaderId"><div class="field"><label>Name</label><input id="ccLeaderName" maxlength="100" placeholder="Full name"></div><div class="cc-form-grid"><div class="field"><label>Role</label><select id="ccLeaderRole"><option value="manager">Manager</option><option value="owner">Owner</option></select></div><div class="field"><label>PIN (4–8 digits)</label><input id="ccLeaderPin" inputmode="numeric" maxlength="8" placeholder="Set / reset PIN"></div></div><div class="btn-row"><button class="btn btn-accent" onclick="saveLeaderAccount()">Save Account</button><button class="btn btn-secondary" onclick="resetLeaderForm()">Clear</button></div><div id="ccLeaderList" style="margin-top:12px">${leaders.map(l=>`<div class="cc-account"><div><b>${escapeHtml(l.name)}</b><div class="small">${escapeHtml(l.role.toUpperCase())} • ${l.active?'ACTIVE':'INACTIVE'}</div><div class="small">Last login: ${fmtTs(l.last_login_at)}</div></div><div class="cc-actions"><button class="btn btn-secondary" onclick="editLeaderAccount('${l.id}')">Edit</button><button class="btn ${l.active?'btn-danger':'btn-secondary'}" onclick="toggleLeaderAccount('${l.id}',${!l.active})">${l.active?'Deactivate':'Activate'}</button></div></div>`).join("")||'<div class="empty">No leadership accounts configured.</div>'}</div></div>`;
+}
+async function refreshAttentionManager(){csmAttentionData=await managerCall("manager_attention_get",{p_dealer_id:currentManagerDealerId});renderAttentionManagerContent()}
+async function createAttentionItem(){const title=$("ccNewTitle").value.trim(),category=$("ccNewCategory").value,priority=$("ccNewPriority").value,description=$("ccNewDescription").value.trim(),evidence=$("ccNewEvidence").value.trim();if(!title||!description)return toast("Enter a title and description");if(evidence&&!/^https:\/\//i.test(evidence))return toast("Evidence link must use HTTPS");try{await managerCall("manager_attention_create",{p_dealer_id:currentManagerDealerId,p_title:title,p_category:category,p_description:description,p_priority:priority,p_evidence_url:evidence||null});toast("Concern published");await refreshAttentionManager()}catch(e){toast(e.message||"Could not create concern")}}
+async function csmAttentionEdit(id){const item=(csmAttentionData?.items||[]).find(x=>x.id===id);if(!item)return;const status=prompt("Status: open, acknowledged, in_progress, awaiting_support, resolved",item.status);if(status===null)return;const st=status.trim().toLowerCase();if(!Object.keys(ATTENTION_STATUSES).includes(st))return toast("Invalid status");const priority=prompt("Priority: low, medium, high, critical",item.priority);if(priority===null)return;const pr=priority.trim().toLowerCase();if(!ATTENTION_PRIORITIES.includes(pr))return toast("Invalid priority");const note=prompt("Update note (optional):","");if(note===null)return;try{await managerCall("manager_attention_update",{p_dealer_id:currentManagerDealerId,p_attention_id:id,p_status:st,p_priority:pr,p_note:note.trim()||null});toast("Concern updated");await refreshAttentionManager()}catch(e){toast(e.message||"Could not update concern")}}
+async function csmAttentionReopen(id){if(!confirm("Reopen this concern? Original raised date and age will be retained."))return;try{await managerCall("manager_attention_update",{p_dealer_id:currentManagerDealerId,p_attention_id:id,p_status:"open",p_note:"Reopened by CSM"});toast("Concern reopened");await refreshAttentionManager()}catch(e){toast(e.message||"Could not reopen concern")}}
+function resetLeaderForm(){$("ccLeaderId").value="";$("ccLeaderName").value="";$("ccLeaderRole").value="manager";$("ccLeaderPin").value=""}
+function editLeaderAccount(id){const l=(csmAttentionData?.leaders||[]).find(x=>x.id===id);if(!l)return;$("ccLeaderId").value=l.id;$("ccLeaderName").value=l.name;$("ccLeaderRole").value=l.role;$("ccLeaderPin").value="";$("ccLeaderName").focus()}
+async function saveLeaderAccount(){const id=$("ccLeaderId").value||null,name=$("ccLeaderName").value.trim(),role=$("ccLeaderRole").value,pin=$("ccLeaderPin").value.trim();if(!name)return toast("Enter the account holder's name");if(!id&&!/^[0-9]{4,8}$/.test(pin))return toast("Set a 4–8 digit PIN");if(pin&&!/^[0-9]{4,8}$/.test(pin))return toast("PIN must be 4–8 digits");try{await managerCall("manager_attention_save_leader",{p_dealer_id:currentManagerDealerId,p_leader_id:id,p_name:name,p_role:role,p_pin_new:pin||null});toast(id?"Leadership account updated":"Leadership account created");await refreshAttentionManager();resetLeaderForm()}catch(e){toast(e.message||"Could not save leadership account")}}
+async function toggleLeaderAccount(id,active){if(!confirm(active?"Activate this leadership account?":"Deactivate this leadership account?"))return;try{await managerCall("manager_attention_set_leader_active",{p_dealer_id:currentManagerDealerId,p_leader_id:id,p_active:active});toast(active?"Account activated":"Account deactivated");await refreshAttentionManager()}catch(e){toast(e.message||"Could not update account")}}
 
 $("taskDue").value=today();if($("recStart"))$("recStart").value=today();if($("reportDate"))$("reportDate").value=today();if($("recType"))renderRecurrenceSchedule();loadDealers();
 </script>
